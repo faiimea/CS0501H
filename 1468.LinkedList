@@ -1,0 +1,273 @@
+#include <iostream>
+using namespace std;
+
+//模板链表类
+
+template<class elemType>
+class LinkedList
+{
+private:
+    struct node
+    {
+        elemType data;
+        node* next;
+        node(const elemType& x, node* n = NULL)
+        {
+            data = x;
+            next = n;
+        }
+        node():next(NULL){}
+        ~node(){}
+    };
+
+    node* head;
+    int currentLength;
+    //node* move(int i) const;
+public:
+    LinkedList();
+    LinkedList(const LinkedList& LinkedOri);
+    ~LinkedList() { clear();delete head; }
+    void clear();
+    void pushFront(const elemType &x);
+    void pushBack(const elemType& x);
+    elemType popFront();
+    elemType popBack();
+    elemType getFront();
+    elemType getBack();
+    int size();
+    void print();
+    virtual char* name() { return NULL; }
+    virtual elemType peak() {   
+        return head->data; }
+    virtual elemType pop() { return head->data; }
+    virtual void push(elemType val) {}
+};
+
+template<class elemType>
+LinkedList<elemType>::LinkedList()
+{
+    head = new node;
+    currentLength = 0;
+}
+//默认构造函数
+
+template<class elemType>
+LinkedList<elemType>::LinkedList(const LinkedList& LinkedOri)
+{
+    head = new node;
+    head->next = 0;
+    node* pthis = head;
+    node* pthat = LinkedOri.head->next;
+    while (pthat)
+    {
+        node* nnode = new node;
+        nnode->data = pthat->data;//数据
+        nnode->next = 0;
+        pthis->next = nnode;
+        pthis = nnode;
+        pthat = pthat->next;
+    }
+    currentLength = LinkedOri.currentLength;
+    }
+
+//拷贝构造函数
+
+template<class elemType>
+void LinkedList<elemType>::clear()
+{
+    node* p = head->next, *q;
+    head->next = NULL;
+    while (p != NULL)
+    {
+        q = p->next;
+        delete p;
+        p = q;
+    }
+    currentLength = 0;
+}
+//析构函数
+
+template<class elemType>
+int LinkedList<elemType>::size()
+{
+    return currentLength;
+}
+//返回链表长度
+
+template<class elemType>
+void LinkedList<elemType>::pushFront(const elemType& x)
+{
+    node* pos;
+    pos = head;
+    pos->next = new node(x, pos->next);
+    ++currentLength;
+}
+//头插入元素
+
+template<class elemType>
+void LinkedList<elemType>::pushBack(const elemType& x)
+{
+    node* pos;
+    //pos = move(currentLength-1);
+    node* rear;
+    rear = head;
+    while (rear->next != NULL) {
+        rear = rear->next;
+    }
+    rear->next = new node(x, rear->next);
+    ++currentLength;
+}
+//尾插入元素
+
+template<class elemType>
+elemType LinkedList<elemType>::popFront()
+{
+    elemType temp;
+    node* pos, * delp;
+    pos = head;
+    delp = pos->next;
+    pos->next = delp->next;
+    temp = delp->data;
+    delete delp;
+    --currentLength;
+    return temp;
+}
+//删除头
+
+template<class elemType>
+elemType LinkedList<elemType>::getFront()
+{
+    elemType temp;
+    node* pos, * delp;
+    pos = head;
+    delp = pos->next;
+    temp = delp->data;
+    return temp;
+}
+//返回头值
+
+template<class elemType>
+elemType LinkedList<elemType>::popBack()
+{
+    elemType temp;
+    node* pos, * delp;
+
+    //pos = move(currentLength - 1);
+    node* rear;
+    rear = head;
+    while (rear->next->next != NULL) {
+        rear = rear->next;
+    }
+    pos = rear;
+    delp = pos->next;
+    pos->next = delp->next;
+    temp = delp->data;
+    delete delp;
+    --currentLength;
+    return temp;
+}
+//删除尾
+
+template<class elemType>
+elemType LinkedList<elemType>::getBack()
+{
+    elemType temp;
+    node* pos, * delp;
+    node* rear;
+    rear = head;
+    while (rear->next->next != NULL) {
+        rear = rear->next;
+    }
+    pos = rear;
+    delp = pos->next;
+    temp = delp->data;
+    return temp;
+}
+//返回尾值
+
+template<class elemType>
+void LinkedList<elemType>::print()
+{
+    node* p = head->next;
+    while (p!=NULL) {
+        cout << p->data << ' ';
+        p = p-> next;
+    }
+    cout << endl;
+}
+//遍历
+
+template<class elemType>
+class Stack :public LinkedList<elemType>
+{
+public:
+     char* name();
+     elemType peak();
+     elemType pop();
+     void push(elemType val);
+};
+//栈定义
+
+template<class elemType>
+char* Stack<elemType>::name()
+{
+    char* temp = (char*)"Stack";
+    return temp;
+}
+
+template<class elemType>
+elemType Stack<elemType>::peak()
+{
+    return this->getBack();
+}
+
+template<class elemType>
+elemType Stack<elemType>::pop()
+{
+    elemType temp;
+    temp = this->popBack();
+    return temp;
+}
+
+template<class elemType>
+void Stack<elemType>::push(elemType val)
+{
+    this->pushBack(val);
+}
+
+template<class elemType>
+class Queue :public LinkedList<elemType>
+{
+public:
+    char* name();
+    elemType peak();
+    elemType pop();
+    void push(elemType val);
+};
+
+template<class elemType>
+char* Queue<elemType>::name()
+{
+    char* temp = (char*)"Queue";
+    return temp;
+}
+
+template<class elemType>
+elemType Queue<elemType>::peak()
+{
+    return this->getBack();
+}
+
+template<class elemType>
+elemType Queue<elemType>::pop()
+{
+    elemType temp;
+    temp = this->popBack();
+    return temp;
+}
+
+template<class elemType>
+void Queue<elemType>::push(elemType val)
+{
+    this->pushFront(val);
+}
