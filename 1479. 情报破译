@@ -1,0 +1,28 @@
+//scanf输入的是地址，printf输出的是值，所以scanf要用&（除了数组和指针）
+#include <iostream>
+#include<cstdio>
+#include<cstring>
+#include<stdlib.h>
+int main()
+{
+	static char Str[10000000];
+	static int next[10000000];
+	int len;
+	scanf("%d", &len);
+	scanf("%s", Str, 10000000);
+	int j = 0, k = -1;
+	next[j] = k;
+	while (Str[j] != '\0')
+	{
+		if (k == -1 || Str[j] == Str[k])
+		{
+			j++;
+			k++;
+			next[j] = k;
+		}
+		else k = next[k];
+	}
+	int res;
+	res = len - next[len - 1]-1;
+	printf("%d", res);
+}
