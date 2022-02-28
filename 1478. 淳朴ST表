@@ -1,0 +1,46 @@
+#include<iostream>
+#include<algorithm>
+#include<cmath>
+using namespace std;
+const int N = 100000;
+const int M = 20;
+int a[N];
+int f[N][M];
+int n;
+void st()
+{
+    for (int j = 0;j < M;j++)
+    {
+        for (int i = 1;i + (1 << j) - 1 <= n;i++)
+        {
+            if (!j)f[i][j] = a[i];
+            else f[i][j] = max(f[i][j - 1], f[i + (1 << (j - 1))][j - 1]);
+        }
+    }
+    return;
+}
+int qmr(int L, int R)
+{
+    int len = R - L + 1;
+    int k = log(len) / log(2);
+
+    return max(f[L][k], f[R - (1 << k) + 1][k]);
+}
+int main()
+{
+    int m;
+    scanf("%d", &n);
+    scanf("%d", &m);
+    for (int i = 1;i <= n;i++)
+    {
+        scanf("%d", &a[i]);
+    }
+    st();
+    while (m--)
+    {
+        int L, R;
+        scanf("%d%d", &L, &R);
+        printf("%d\n", qmr(L, R));
+    }
+    return 0;
+}
