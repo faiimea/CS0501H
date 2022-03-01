@@ -1,0 +1,103 @@
+#include <iostream>
+using namespace std;
+int kk[100010];
+int pp[100010];
+bool dieid[100010] = { 0 };
+struct node
+{
+	int ID;
+	node* next;
+	node* prev;
+	bool State;
+	node(int x1, bool s1, node* n1=NULL, node* p1=NULL)
+	{
+		ID = x1;
+		State = s1;
+		next = n1;
+		prev = p1;
+	}
+	node() { next = prev = NULL; }
+};
+node* Loc[100010];
+int main()
+{
+	std::ios::sync_with_stdio(false);
+	std::cin.tie(0);
+	std::cout.tie(0);
+	int num;
+	int k, p;
+	node* m;
+	node* head;
+	head = new node;
+	head->prev = NULL;
+	node ID1;
+	ID1.next = NULL;
+	ID1.prev = head;
+	ID1.ID = 1;
+	ID1.State = false;
+	Loc[1] = &ID1;
+	Loc[0] = head;
+	head->next = &ID1;
+	m = head;
+	int temk;
+	temk = 0;
+	cin >> num;
+	--num;
+	for (int i = 0;i < num;++i)
+	{
+		cin >> kk[i] >> pp[i];
+	}
+	int DEN = 0;
+	cin >> DEN;
+	for (int j = 0;j < DEN;++j)
+	{
+		int dd;
+		cin >> dd;
+		dieid[dd] = 1;
+	}
+	//不影响复杂度
+
+	for (int i = 0;i < num;++i)
+	{
+		k = kk[i];
+		p = pp[i];
+		m = Loc[k];
+		if (p == 0)
+		{
+			node* tmp;
+			tmp= m->prev;
+			m->prev = new node(i + 2, dieid[i + 2], m, m->prev);
+			tmp->next = m->prev;
+			Loc[i + 2] = m->prev;
+		}
+		else
+		{
+			node* tmp;
+			if (m->next != NULL)
+			{
+				tmp = m->next;
+				m->next = new node(i + 2, dieid[i + 2], tmp, m);
+				tmp->prev = m->next;
+				Loc[i + 2] = m->next;
+			}
+			else
+			{
+				m->next = new node(i + 2, dieid[i + 2], NULL, m);
+				Loc[i + 2] = m->next;
+			}
+		}
+		m = head;
+	}
+	if (dieid[1] == true) ID1.State = true;
+	m = head->next;
+
+	while (m != NULL)
+	{
+		if (m->State == false)
+		{
+			cout << m->ID << ' ';
+		}
+			m = m->next;
+	}
+	cout << endl;
+}
