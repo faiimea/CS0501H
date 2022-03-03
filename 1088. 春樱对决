@@ -1,0 +1,62 @@
+/*关于这道题
+最开始我用的是单链表，写对了之后发现有两个TLE点无法解决，然后试了很多Jesuf环思路，还是不行
+然后我试了下数组，也很差
+听说可以用树状数组解决，但我不会写树状数组
+然后xtx佬推出来个绝妙的数学表达式，用递归求解，90ms解决战斗
+差距还是很大的QAQ
+看来我对递归的了解还是不深刻啊
+*/
+
+#include <iostream>
+using namespace std;
+int ChunYing(int N, int M, int start = 0)
+{
+	if (N <= 1)
+	{
+		return 0;
+	}
+	else if (N == 2)
+	{
+		if ((M - 1 + start) % 2)	return 0;
+		else return 1;
+		//最后只有一个或两个式神的时候停止递归，判断出最小（即现在）存活的式神在哪里
+	}
+	int X = (M - 1 + start) % (2 * N - 2);
+		//在新的表中该淘汰哪一个式神
+	int ans;
+	if (X < N - 1)
+	{
+		ans = ChunYing(N - 1, M, X);
+		//若是在第二行淘汰，不必回溯
+	}
+	else
+	{
+		ans = ChunYing(N - 1, M, X - 1);
+		//若是在第二行淘汰，则回溯一名
+	}
+	int Y = (X < N) ? X : (2 * N - 2 - X);
+	if (ans < Y)
+	{
+	//y代表该回合淘汰的真实坐标，若目前存活的坐标在该坐标左侧，则不受影响
+		return ans;
+	}
+	else
+	{
+	//若目前存活的坐标>=这次淘汰的坐标，则ans+1，因为左侧多淘汰了一个人
+		++ans;
+		return (ans);
+	}
+}
+
+int main()
+{
+	int N, M;
+	cin >> N >> M;
+	int ans = ChunYing(N, M);
+	ans++;
+	//从零计数++1
+	cout << ans;
+	return 0;
+}
+
+//Honor for xtx,a genius.
