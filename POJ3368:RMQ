@@ -1,0 +1,50 @@
+#include <iostream>
+using namespace std;
+int n;
+int a[1000];
+int m[1000][20];
+int f[1000];
+int q;
+void st_prepare()
+{
+    for (int i = 1;i <= n;i++)m[i][0] = f[i];
+    for (int j = 1;(1 << j) <= n;j++)
+        for (int i = 1;i - 1 + (1 << j) <= n;i++)
+            m[i][j] = max(m[i][j - 1], m[i + (1 << (j - 1))][j - 1]);
+}
+
+int rmq(int l, int r)
+{
+    if (l > r)return 0;
+    int k = trunc(log2(r - l + 1));
+    return max(m[l][k], m[r - (1 << k) + 1][k]);
+}
+
+int main()
+{
+    while (scanf("%d", &n) && n)
+    {
+        scanf("%d", &q);
+        memset(a, 0, sizeof(a));
+        a[0] = 1005;
+        for (int i = 1;i <= n;i++)
+        {
+            scanf("%d", &a[i]);
+            if (a[i] == a[i - 1])
+                f[i] = f[i - 1] + 1;
+            else f[i] = 1;
+        }
+        st_prepare();
+        for (int i = 1;i <= n;i++)cout << f[i] << endl;
+        int l, r;
+        for (int i = 1;i <= q;i++)
+        {
+            scanf("%d%d", &l, &r);
+            int t = l;
+            while (t <= r && a[t] == a[t - 1])
+                t++;
+            printf("%d\n", max(rmq(t, r), t - l));
+        }
+    }
+    return 0;
+}
