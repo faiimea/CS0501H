@@ -1,0 +1,16 @@
+int next[100];
+void GetNext(char T[])
+{
+	int j = 0, k = -1;
+	next[j] = k;
+	while (T[j] != '\0')
+	{
+		if (k == -1 || T[j] == T[k])
+		{
+			j++;
+			k++;
+			next[j] = k;
+		}
+		else k = next[k];
+	}
+}
