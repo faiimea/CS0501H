@@ -1,0 +1,85 @@
+#include <string>
+#include <iostream>
+#include <fstream>
+using namespace std;
+class Editor
+{
+private:
+	struct node
+	{
+		string data;
+		node* next;
+		node( string x=" ", node* n = NULL)
+		{
+			data = x;
+			next = n;
+		}
+		~node() {}
+	};
+	node* head;
+	char* filename;
+
+	void error()
+	{
+		cout << "出错" << endl;
+	}
+	int getNum(char* &s);
+	node* move(int x);
+	bool skip(char*& s, char ch);
+public:
+	Editor(const char*);
+	~Editor();
+
+	void list(char* A) {}
+	void del(char* A) {}
+	void ins(char* A) {}
+};
+//Editor类的声明
+Editor::Editor(const char* s)
+{
+	filename = new char[strlen(s) + 1];
+	strcpy(filename, s);
+	ifstream file(s);
+	string str;
+
+	if (file.is_open())
+	{
+		node* p = head = new node;
+		while (true)
+		{
+			getline(file, str);
+			if (file.eof())	break;
+			p->next = new node(str);
+			p = p->next;
+		}
+		cout << "open successfully" << endl;
+		file.close();
+	}
+	else
+	{
+		cout << "error happen" << endl;
+	}
+}
+
+Editor::~Editor()
+{
+	ofstream file(filename);
+	if (!file.is_open()) { error();return; }
+	node* p = head->next, *q;
+	while (p != NULL)
+	{
+		q = p->next;
+		file << p->data << endl;
+		delete p;
+		p = q;
+		//Memory leak；
+	}
+	delete head;
+	file.close();
+	cout << "finish" << endl;
+}
+
+int main()
+{
+
+}
