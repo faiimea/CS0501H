@@ -1,0 +1,112 @@
+#include <iostream>
+#include <cmath>
+using namespace std;
+int n, m, q;
+int R, L;
+int a[1000010];
+int list_now[1000010][30];
+int list_loc[1000010][30];
+int sum0[1000010];
+int sum1[1000010];
+int max_4(int a, int b, int c, int d)
+{
+    int m;
+    m = max(a, b);
+    m = max(m, c);
+    m = max(m, d);
+    return m;
+}
+
+
+void prp()
+{
+    int sum0_now = 0;
+    int sum1_now = 0;
+    for (int i = 1;i <= n;++i)
+    {
+        if (a[i] == 0)
+        {
+            sum0_now++;
+        }
+        else
+        {
+            sum1_now++;
+        }
+        sum0[i] = sum0_now;
+        sum1[i] = sum1_now;
+    }
+        
+        //维护两个sum数组
+
+        for (int i = 1;i <= n;++i)
+        {
+            list_now[i][0] = 1;
+        }
+        int tmp_sum0;
+        int tmp_sum1;
+        int tmp_res1;
+        int tmp_res2;
+        for (int j = 1;(1 << j )-1 <= n;++j)
+        {
+            for (int i = 1;i + (1 << j )-1 <= n;++i)
+            {
+                //这里关于sum0和sum1的计算有一些问题，比如1123，在23中看起来只有一个1
+                tmp_sum0 = sum0[i + (1 << j) - 1] - sum0[i-1] ;
+                tmp_sum1 = sum1[i + (1 << j) - 1] - sum1[i-1] ;
+                tmp_res1 = sum0[i + (1 << (j - 1)) - 1] - sum0[i-1] + list_now[i + (1 << (j - 1))][j - 1];
+                tmp_res2 = list_now[i][j - 1] + sum1[i + (1 << j)-1] - sum1[i + (1 << (j - 1))-1];
+                list_now[i][j] = max_4(tmp_sum0, tmp_sum1, tmp_res1, tmp_res2);
+            }
+        }
+    
+}
+
+void ans(int L,int R)
+{
+    int s;
+    s = int(log(R - L + 1) / log(2));
+    int res;
+    int Res1;
+    int Res2;
+    Res1 = Res2 = 0;
+    Res1 = list_now[L][s] + sum1[R] - sum1[L+(1<<s)-1];
+    Res2 = list_now[R + 1 - (1 << s)][s] + sum0[R  - (1 << s)] - sum0[L-1];
+    res = 0;
+    for (int i = 1;i <= n;++i)
+    res = max(Res1,Res2);
+    printf("%d\n", res);
+}
+void ans1(int L, int R)
+{
+    int temp;
+    bool State;
+    State = false;
+    for (int i = L;i <= R;++i)
+    {
+        if (a[i] == 0)
+            State = true;
+        if (State == true && a[i] == 1)
+        {
+            printf("2\n");
+            return;
+        }
+    }
+    printf("1\n");
+}
+
+int main()
+{
+    sum0[0] = 0;
+    sum1[0] = 0;
+    cin >> n >> m;
+    for (int i = 1;i <= n;++i)    scanf("%d", &a[i]);
+    prp();
+    while (m--)
+    {
+        scanf("%d%d%d", &q, &L, &R);
+        if (q == 1)    ans(L, R);
+        else ans1(L, R);
+    }
+    return 0;
+}
+
