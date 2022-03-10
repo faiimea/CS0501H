@@ -1,0 +1,103 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+int main()
+{
+    static char ori[100];
+    static char tmp[10000];
+    static char Circle[10000];
+    static char res[10000];
+    int Circle_num[100];
+    int ori_now = 0;
+    int tmp_now = 0;
+    int res_now = 0;
+    int cir_now=0;
+    int tecir_now = 0;
+    int temp = 0;
+    int j = 0;
+    bool work_mode = false;
+    int work_num = 0;
+    cin >> ori;
+    while (ori[ori_now] != '\0')
+    {
+        if (work_num == 0) work_mode = false;
+        else work_mode = true;
+
+        if ((ori[ori_now] >= 'a' && ori[ori_now] <= 'z') && (!work_mode)) {
+            res[res_now] = ori[ori_now];
+            ++res_now;
+            ++ori_now;
+            continue;
+        }
+        if ((ori[ori_now] >= '0' && ori[ori_now] <= '9')) {
+            work_mode = true;
+            temp = ori[ori_now] - '0';
+            ori_now++;
+            while ((ori[ori_now] >= '0' && ori[ori_now] <= '9'))
+            {
+                temp = temp * 10 + (ori[ori_now]-'0');
+                ori_now++;
+            }
+            Circle_num[work_num] = temp;
+            ++work_num;
+            continue;
+        }
+        if ((work_mode) && ((ori[ori_now] == '['))) {
+            tmp[tmp_now] = '[';
+            ++tmp_now;
+            ++ori_now;
+            continue;
+        }
+        if ((work_mode) && (ori[ori_now] >= 'a' && ori[ori_now] <= 'z')) {
+            temp = 0;
+            tmp[tmp_now] = ori[ori_now];
+            ++tmp_now;
+            ++ori_now;
+            continue;
+        }
+        if ((work_mode) && (ori[ori_now] == ']')) {
+            --tmp_now;
+            while (tmp[tmp_now] != '[')
+            {
+                Circle[cir_now] = tmp[tmp_now];
+                tmp[tmp_now] = 0;
+                ++cir_now;
+                --tmp_now;
+            }
+            tmp[tmp_now] = 0;
+            tecir_now = cir_now;
+            //circle rebuild
+            for (int cir = 0;cir < Circle_num[work_num-1];++cir)
+            {
+                while (tecir_now != 0)
+                {
+                    
+                    tmp[tmp_now] = Circle[tecir_now-1];
+                    --tecir_now;
+                    ++tmp_now;
+                }
+                tecir_now = cir_now;
+            }
+            for (int i = cir_now;i >= 0;--i) Circle[i] = '\0';
+            cir_now = 0;
+            ++ori_now;
+            Circle_num[work_num-1] = 0;
+            work_num--;
+        }
+        if (work_mode && work_num == 0)
+        {
+            --tmp_now;
+            while (j<=tmp_now )
+            {
+                if (tmp[j] != '[') res[res_now] = tmp[j];
+                    tmp[j] = '\0';
+                    ++res_now;
+                    ++j;
+            }
+            tmp_now = 0;
+            j = 0;
+        }
+    }
+    cout << res;
+}
