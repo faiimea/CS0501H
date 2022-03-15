@@ -1,1 +1,543 @@
+#pragma once
+#ifndef SJTU_VECTOR_HPP
+#define SJTU_VECTOR_HPP
 
+#include "exceptions.hpp"
+#include <climits>
+#include <cstddef>
+
+namespace sjtu {
+    /**
+     * a data container like std::vector
+     * store data in a successive memory and support random access.
+     */
+    template<typename T>
+    class vector {
+    private:
+        T* Vec_Arr;//用于储存数据的数组
+        int Vec_size;//目前数组中存放数据的多少
+        int Vec_fin;//该数组的最大容量
+
+    public:
+        /**
+         * TODO
+         * a type for actions of the elements of a vector, and you should write
+         *   a class named const_iterator with same interfaces.
+         */
+
+         /**
+          * you can see RandomAccessIterator at CppReference for help.
+          */
+        class const_iterator;
+        //iterator的定义
+        class iterator {
+            friend class vector;
+        private:
+            /**
+             * TODO add data members
+             *   just add whatever you want.
+             */
+            const vector* Vec_Now;
+            int Ite_Loc;
+        public:
+            /**
+             * return a new iterator which pointer n-next elements
+             * as well as operator-
+             */
+            iterator()
+            {
+                Vec_Now = NULL;
+                Ite_Loc = 0;
+            }
+            iterator(const vector* Vec, int Ite)
+            {
+                Vec_Now = Vec;
+                Ite_Loc = Ite;
+            }
+            iterator operator+(const int& n) const {
+                //TODO
+                iterator Ite_tmp = *this;
+                Ite_tmp.Ite_Loc += n;
+                return Ite_tmp;
+            }
+            iterator operator-(const int& n) const {
+                //TODO
+                iterator Ite_tmp = *this;
+                Ite_tmp.Ite_Loc -= n;
+                return Ite_tmp;
+            }
+            // return the distance between two iterators,
+            // if these two iterators point to different vectors, throw invaild_iterator.
+            int operator-(const iterator& rhs) const {
+                //TODO
+                if (Vec_Now == rhs.Vec_Now)    throw   invalid_iterator();
+                int Vec_Dis;
+                Vec_Dis = *this - rhs;
+                if (Vec_Dis < 0)   Vec_Dis *= (-1);
+                return Vec_Dis;
+            }
+            iterator& operator+=(const int& n) {
+                //TODO
+                Ite_Loc += n;
+                return *this;
+            }
+
+            iterator& operator-=(const int& n) {
+                //TODO
+                Ite_Loc -= n;
+                return *this;
+            }
+            /**
+             * TODO iter++
+             */
+            iterator operator++(int)
+            {
+                iterator temp = *this;
+                ++Ite_Loc;
+                return temp;
+            }
+            /**
+             * TODO ++iter
+             */
+            iterator& operator++()
+            {
+                Ite_Loc++;
+                return *this;
+            }
+            /**
+             * TODO iter--
+             */
+            iterator operator--(int) {
+                iterator temp = *this;
+                --Ite_Loc;
+                return temp;
+            }
+            /**
+             * TODO --iter
+             */
+            iterator& operator--() {
+                Ite_Loc--;
+                return *this;
+            }
+            /**
+             * TODO *it
+             */
+            T& operator*() const
+            {
+                return Vec_Now->Vec_Arr[Ite_Loc];
+            }
+            /**
+             * a operator to check whether two iterators are same (pointing to the same memory address).
+             */
+            bool operator==(const iterator& rhs) const {
+                if (Vec_Now == rhs.Vec_Now && Ite_Loc == rhs.Ite_Loc)   return true;
+                else return false;
+            }
+            bool operator==(const const_iterator& rhs) const {
+                if (Vec_Now == rhs.Vec_Now && Ite_Loc == rhs.Ite_Loc)   return true;
+                else return false;
+            }
+            /**
+             * some other operator for iterator.
+             */
+            bool operator!=(const iterator& rhs) const {
+                if (Vec_Now != rhs.Vec_Now || Ite_Loc != rhs.Ite_Loc)   return true;
+                else return false;
+            }
+            bool operator!=(const const_iterator& rhs) const {
+                if (Vec_Now != rhs.Vec_Now || Ite_Loc != rhs.Ite_Loc)   return true;
+                else return false;
+            }
+        };
+        //const iterator的定义
+        /**
+         * TODO
+         * has same function as iterator, just for a const object.
+         */
+        class const_iterator {
+            friend class vector;
+        private:
+            /**
+             * TODO add data members
+             *   just add whatever you want.
+             */
+            const vector* Vec_Now;
+            int Ite_Loc;
+        public:
+            /**
+             * return a new iterator which pointer n-next elements
+             * as well as operator-
+             */
+            const_iterator()
+            {
+                Vec_Now = NULL;
+                Ite_Loc = 0;
+            }
+            const_iterator(const vector* Vec, int Ite)
+            {
+                Vec_Now = Vec;
+                Ite_Loc = Ite;
+            }
+            const_iterator operator+(const int& n) const {
+                //TODO
+                const_iterator Ite_tmp = *this;
+                Ite_tmp.Ite_Loc += n;
+                return Ite_tmp;
+            }
+            const_iterator operator-(const int& n) const {
+                //TODO
+                const_iterator Ite_tmp = *this;
+                Ite_tmp.Ite_Loc -= n;
+                return Ite_tmp;
+            }
+            // return the distance between two iterators,
+            // if these two iterators point to different vectors, throw invaild_iterator.
+            int operator-(const iterator& rhs) const {
+                //TODO
+                if (Vec_Now == rhs.Vec_Now)    throw   invalid_iterator();
+                int Vec_Dis;
+                Vec_Dis = *this - rhs;
+                if (Vec_Dis < 0)   Vec_Dis *= (-1);
+                return Vec_Dis;
+            }
+            const_iterator& operator+=(const int& n) {
+                //TODO
+                Ite_Loc += n;
+                return *this;
+            }
+
+            const_iterator& operator-=(const int& n) {
+                //TODO
+                Ite_Loc -= n;
+                return *this;
+            }
+            /**
+             * TODO iter++
+             */
+            const_iterator operator++(int)
+            {
+                const_iterator temp = *this;
+                ++Ite_Loc;
+                return temp;
+            }
+            /**
+             * TODO ++iter
+             */
+            const_iterator& operator++()
+            {
+                Ite_Loc++;
+                return *this;
+            }
+            /**
+             * TODO iter--
+             */
+            const_iterator operator--(int) {
+                const_iterator temp = *this;
+                --Ite_Loc;
+                return temp;
+            }
+            /**
+             * TODO --iter
+             */
+            const_iterator& operator--() {
+                Ite_Loc--;
+                return *this;
+            }
+            /**
+             * TODO *it
+             */
+            T& operator*() const
+            {
+                return Vec_Now->Vec_Arr[Ite_Loc];
+            }
+            /**
+             * a operator to check whether two iterators are same (pointing to the same memory address).
+             */
+            bool operator==(const iterator& rhs) const {
+                if (Vec_Now == rhs.Vec_Now && Ite_Loc == rhs.Ite_Loc)   return true;
+                else return false;
+            }
+            bool operator==(const const_iterator& rhs) const {
+                if (Vec_Now == rhs.Vec_Now && Ite_Loc == rhs.Ite_Loc)   return true;
+                else return false;
+            }
+            /**
+             * some other operator for iterator.
+             */
+            bool operator!=(const iterator& rhs) const {
+                if (Vec_Now != rhs.Vec_Now || Ite_Loc != rhs.Ite_Loc)   return true;
+                else return false;
+            }
+            bool operator!=(const const_iterator& rhs) const {
+                if (Vec_Now != rhs.Vec_Now || Ite_Loc != rhs.Ite_Loc)   return true;
+                else return false;
+            }
+        };
+        //vector 实现
+        /**
+         * TODO Constructs
+         * Atleast two: default constructor, copy constructor（构造函数，拷贝函数）
+         */
+        vector() {
+            Vec_size = 0;
+            Vec_fin = 1;
+            Vec_Arr = NULL;
+        }
+        vector(const vector& other) {
+            Vec_size = other.Vec_size;
+            Vec_fin = other.Vec_fin;
+            Vec_Arr = (T*) operator new (sizeof(T) * Vec_fin);
+            for (int i = 0;i < Vec_size;++i)
+                memcpy(&Vec_Arr[i], &other.Vec_Arr[i], sizeof(T));
+        }
+        /**
+         * TODO Destructor（析构函数）
+         */
+        ~vector() {
+            for (int i = 0;i < Vec_size;++i)
+                Vec_Arr[i].~T();
+            operator delete (Vec_Arr);
+        }
+        /**
+         * TODO Assignment operator
+         */
+        vector& operator=(const vector& other) {
+            if (this == &other)    return *this;
+            Vec_size = other.Vec_size;
+            Vec_fin = other.Vec_fin;
+            operator delete (Vec_Arr);
+            Vec_Arr = (T*) operator new (sizeof(T) * Vec_fin);
+            for (int i = 0;i < Vec_size;++i)
+                memcpy(&Vec_Arr[i], &other.Vec_Arr[i], sizeof(T));
+            return *this;
+        }
+        /**
+         * assigns specified element with bounds checking
+         * throw index_out_of_bound if pos is not in [0, size)
+         * 这里要处理一下异常类
+         */
+        T& at(const size_t& pos) {
+            if (pos >= Vec_size) throw "index_out_of_bound";
+            else return Vec_Arr[pos];
+        }
+        const T& at(const size_t& pos) const {
+            if (pos >= Vec_size) throw "index_out_of_bound";
+            else return Vec_Arr[pos];
+        }
+        /**
+         * assigns specified element with bounds checking
+         * throw index_out_of_bound if pos is not in [0, size)
+         *  异常类
+         * !!! Pay attentions
+         *   In STL this operator does not check the boundary but I want you to do.
+         * 看上面
+         */
+        T& operator[](const size_t& pos) {
+            if (pos >= Vec_size) throw "index_out_of_bound";
+            else return Vec_Arr[pos];
+        }
+        const T& operator[](const size_t& pos) const {
+            if (pos >= Vec_size) throw "index_out_of_bound";
+            else return Vec_Arr[pos];
+        }
+        /**
+         * access the first element.
+         * throw container_is_empty if size == 0
+         * 异常类
+         */
+        const T& front() const {
+            if (Vec_size == 0) throw "container_is_empty";
+            else return Vec_Arr[0];
+        }
+        /**
+         * access the last element.
+         * throw container_is_empty if size == 0
+         * 异常类
+         */
+        const T& back() const {
+            if (Vec_size == 0) throw "container_is_empty";
+            else return Vec_Arr[Vec_size - 1];
+        }
+        /**
+         * returns an iterator to the beginning.
+         */
+        iterator begin() {
+            iterator temp(this, 0);
+            return temp;
+        }
+        const_iterator cbegin() const {
+            const_iterator temp(this, 0);
+            return temp;
+            //用构造函数吧，赋值好像不行
+        }
+        /**
+         * returns an iterator to the end.
+         */
+        iterator end() {
+            iterator temp(this, Vec_size);
+            return temp;
+        }
+        const_iterator cend() const {
+            /*const_iterator temp(this, Vec_size - 1);*/
+            const_iterator temp(this, Vec_size);
+            return temp;
+        }
+        /**
+         * checks whether the container is empty
+         */
+        bool empty() const {
+            //?
+            delete[]Vec_Arr;
+            if (Vec_size == 0) return true;
+            else return false;
+        }
+        /**
+         * returns the number of elements
+         */
+         //size_t是无符号整数
+        size_t size() const {
+            return Vec_size;
+        }
+        /**
+         * clears the contents
+         */
+        void clear() {
+            for (int i = 0;i < Vec_size;++i)
+                Vec_Arr[i] = NULL;
+            Vec_size = 0;
+        }
+        /**
+         * inserts value before pos
+         * returns an iterator pointing to the inserted value.
+         */
+        iterator insert(iterator pos, const T& value)
+        {
+            if (pos.Vec_Now != this)
+                throw invalid_iterator();
+            if (Vec_size + 1 >= Vec_fin)
+                expand();
+            int loc;
+            loc = pos.Ite_Loc;
+            for (int i = Vec_size;i > loc;--i)
+            {
+                Vec_Arr[i] = Vec_Arr[i - 1];
+            }
+            new(&Vec_Arr[loc]) T(value);
+            Vec_size++;
+            iterator temp(this, loc);
+            return temp;
+        }
+        /**
+         * inserts value at index ind.
+         * after inserting, this->at(ind) == value
+         * returns an iterator pointing to the inserted value.
+         * throw index_out_of_bound if ind > size (in this situation ind can be size because after inserting the size will increase 1.)
+         */
+        iterator insert(const size_t& ind, const T& value) {
+
+            if (Vec_size + 1 >= Vec_fin)
+                expand();
+            if (ind > Vec_size)
+                throw index_out_of_bound();
+
+
+            for (int i = Vec_size;i > ind;--i)
+            {
+                Vec_Arr[i] = Vec_Arr[i - 1];
+            }
+            new(&Vec_Arr[ind]) T(value);
+            Vec_size++;
+            iterator temp(this, ind);
+        }
+        /**
+         * removes the element at pos.
+         * return an iterator pointing to the following element.
+         * If the iterator pos refers the last element, the end() iterator is returned.
+         */
+        iterator erase(iterator pos) {
+            if (pos.Vec_Now != this)
+                throw invalid_iterator();
+            int loc;
+            loc = pos.Ite_Loc;
+            for (int i = loc;i < Vec_size;++i)
+            {
+                Vec_Arr[i] = Vec_Arr[i + 1];
+            }
+            Vec_size--;
+            iterator temp(this, loc);
+            return temp;
+        }
+        /**
+         * removes the element with index ind.
+         * return an iterator pointing to the following element.
+         * throw index_out_of_bound if ind >= size
+         */
+        iterator erase(const size_t& ind) {
+
+            for (int i = ind;i < Vec_size;++i)
+            {
+                Vec_Arr[i] = Vec_Arr[i + 1];
+            }
+            Vec_size--;
+            iterator temp(this, ind);
+            return temp;
+        }
+        /**
+         * adds an element to the end.
+         */
+        void push_back(const T& value) {
+            if (Vec_size + 1 == Vec_fin)
+                expand();
+            new(&Vec_Arr[Vec_size]) T(value);
+            ++Vec_size;
+        }
+        /**
+         * remove the last element from the end.
+         * throw container_is_empty if size() == 0
+         */
+        void pop_back() {
+            if (Vec_size == 0) throw container_is_empty();
+            Vec_size--;
+            Vec_Arr[Vec_size].~T();
+            return;
+        }
+
+        /**
+        *扩容函数
+        */
+        void expand() {
+            Vec_fin *= 2;
+            T* Arr = (T*) ::operator new (sizeof(T) * Vec_fin);
+            for (int i = 0;i < Vec_size;++i)
+                memcpy(&Arr[i], &Vec_Arr[i], sizeof(T));
+            operator delete (Vec_Arr);
+            Vec_Arr = Arr;
+
+        }
+    };
+    //有一些有帮助的文档
+    // 无构造函数类的解决
+    //https://blog.csdn.net/WUDAIJUN/article/details/9273339?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522164713864816780271518354%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=164713864816780271518354&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_ecpm_v1~rank_v31_ecpm-2-9273339.pc_search_result_cache&utm_term=operator+new%28%29&spm=1018.2226.3001.4187
+    // 检查内存泄漏
+    //https://blog.csdn.net/mfcing/article/details/42673393
+    // 内存转移
+    //https://blog.csdn.net/renlinyu3495/article/details/85384059?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522164714914816780271921558%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=164714914816780271921558&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_ecpm_v1~rank_v31_ecpm-1-85384059.pc_search_result_cache&utm_term=memcpy%E4%B8%8E%3D&spm=1018.2226.3001.4187
+}
+vector
+dynamic contiguous array
+/*
+接口说明
+构造函数，析构函数
+重载赋值运算
+下标访问
+front(), back(), empty(), size(), clear()
+insert, erase
+push_back(), pop_back()
+迭代器及其相关操作
+提示
+模板类型可能是一个没有默认构造函数的类。
+
+例如template<typename T>，内部数据存储形式为T val，空节点就只能填入T()，但是没有默认构造函数的T无法构造
+
+尝试使用指针的形式存储数据*/
+#endif
