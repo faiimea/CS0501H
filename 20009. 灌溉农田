@@ -1,0 +1,90 @@
+#include <iostream>
+using namespace std;
+
+int num;
+int Stack_top;
+
+struct Field
+{
+	int height;
+	int ID;
+	int value;
+	int S;
+	int L_num;
+	int R_num;
+};
+Field fie[1000000];
+Field sta[1000000];
+
+void Stack_Build()
+{
+	Field L, R;
+	L.height = 100000000000;
+	L.ID = 0;
+	sta[0] = L;
+	for (int j = 1;j <= num;++j)
+	{
+		while ((sta[Stack_top].height < fie[j].height)&& Stack_top!=0)
+		{
+			fie[sta[Stack_top].ID].R_num = j;
+			Stack_top--;
+		}
+		if (Stack_top == 0)
+		{
+			fie[j].L_num = 0;
+			++Stack_top;
+			sta[Stack_top] = fie[j];
+			continue;
+		}
+		int tmp;
+		if (sta[Stack_top].height >= fie[j].height)
+		{
+			tmp = Stack_top;
+			while ((sta[tmp].height == fie[j].height) && (tmp != 0))
+			{
+				tmp--;
+			}
+			if (tmp == 0)	fie[j].L_num = 0;
+			else
+			{
+				fie[j].L_num = sta[tmp].ID;
+			}
+			++Stack_top;
+			sta[Stack_top] = fie[j];
+		}
+
+	}
+	for (int i = 1;i <= Stack_top;++i)
+	{
+		fie[sta[i].ID].R_num = num + 1;
+	}
+}
+
+int main()
+{
+
+	Stack_top = 0;
+	cin >> num;
+	for (int i = 1;i <= num;++i)
+	{
+		cin >> fie[i].height;
+		fie[i].ID = i;
+	}
+	int res_ID = 0;
+	int res = 0;
+	Stack_Build();
+	for (int i = 1;i <= num;++i)
+	{
+		cin >> fie[i].value;
+		fie[i].value = (fie[i].R_num - fie[i].L_num - 1) * fie[i].value;
+		if (fie[i].value > res)
+		{
+			res_ID = i;
+			res = fie[i].value;
+		}
+	}
+	/*for (int i = 1;i <= num;++i)
+		cout << "左侧最高为"<<fie[i].L_num-1 << " " << "右侧最高为"<<fie[i].R_num-1<<" " << "土地面积" << fie[i].R_num - fie[i].L_num - 1 << endl;*/
+	cout << (res_ID - 1) << " " << res;
+
+}
