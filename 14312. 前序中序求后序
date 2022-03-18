@@ -1,0 +1,56 @@
+#include <iostream>
+using namespace std;
+int Length;
+int preorder[5010];
+int inorder[5010];
+int postorder[5010];
+int post_now = 0;
+struct Node
+{
+	Node* left;
+	Node* right;
+	int value;
+};
+
+int Find_Root(int value,int inorder[],int length)
+{
+	for (int i = 0;i < length;++i)
+	{
+		if (inorder[i] == value)	return i;
+	}
+}
+
+Node* Create_Tree(int preorder[], int inorder[], int length)
+{
+	if (length == 0)	return NULL;
+	int Value_Root = preorder[0];
+	int Left_Tree = Find_Root(Value_Root, inorder, length);
+	Node* Root = new Node;
+	Root->value = Value_Root;
+	Root->left = Create_Tree(preorder + 1, inorder, Left_Tree);
+	Root->right = Create_Tree(preorder + Left_Tree + 1, inorder + Left_Tree + 1, length - 1 - Left_Tree);
+	return Root;
+}
+
+void postOrder(Node* Root)
+{
+	if (Root == NULL)	return;
+	postOrder(Root->left);
+	postOrder(Root->right);
+	postorder[post_now] = Root->value;
+	++post_now;
+}
+
+int main()
+{
+	cin >> Length;
+	for (int i = 0;i < Length;++i)
+		cin >> preorder[i];
+	for (int i = 0;i < Length;++i)
+		cin >> inorder[i];
+	Node* Tree;
+	Tree=Create_Tree(preorder, inorder, Length);
+	postOrder(Tree);
+	for (int i = 0;i < Length;++i)
+		cout<<postorder[i]<<" ";
+}
