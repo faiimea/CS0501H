@@ -1,9 +1,22 @@
-int head=1,tail=0; //head对应首元素，tail对应尾元素
-int q[n+1]={0}; //单调队列空间
-for(int i=1;i<=n;++i) {
-while(head<=tail && a[q[tail]]>=a[i]) --tail;//保证单调性
-q[++tail]=i; //入队，储存的是索引值
-while(q[head]<=i-k) ++head; //如果队首元素已经"过时"，出队
-if(i>=k) ans[i]=a[q[head]]; //得到答案，即队首元素
+
+#include <iostream>
+using namespace std;
+int main()
+{
+
+	int n;
+	cin >> n;
+	int a[1000];
+	int k;k = 3;
+	int ans[1000];
+	for (int i = 1;i <= n;++i)
+		cin >> a[i];
+	int head=1;int tail=0;
+	int q[1000] = { 0 }; //单调队列空间
+	for (int i = 1;i <= n;++i) {
+		while (head <= tail && a[q[tail]] >= a[i]) --tail;//保证单调性
+		q[++tail] = i; //入队，储存的是索引值
+		while (q[head] <= i - k) ++head; //如果队首元素已经"过时"，出队
+		if (i >= k) ans[i] = a[q[head]]; //得到答案，即队首元素
+	}
 }
-11
