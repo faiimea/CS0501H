@@ -1,0 +1,47 @@
+#include <iostream>
+using namespace std;
+int main()
+{
+	static int ori[1000010];
+	int Works[2010] = { 0 };
+	int Masters=0;
+	int Start = 1;
+	int Begin=1;
+	int Num = 0;
+	int cnt = 0;
+	cin >> Num >> Masters;
+	int Windows = Num;
+	for (int i = 1;i <= Num;++i)
+	{
+		cin >> ori[i];
+		if(Works[ori[i]]==0)	++cnt;
+		++Works[ori[i]];
+		if (cnt == Masters)
+		{
+			if (Windows > i - Begin + 1) 
+			{
+				Windows = i - Begin + 1;
+				Start = Begin;
+			}
+			while (Works[ori[Begin]] > 0)
+			{
+				Works[ori[Begin]]--;
+				
+				if (Works[ori[Begin++]] == 0)
+				{
+					if (Windows > i - Begin + 1)
+					{
+						Windows = i - Begin + 1;
+						Start = Begin-1;
+					}
+					cnt--;
+					break;
+				}
+			}
+		
+		}
+	}
+	cout << Start <<" "<< Start + Windows;
+
+}
+
