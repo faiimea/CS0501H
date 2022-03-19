@@ -1,0 +1,89 @@
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+int a[500010];
+int gcd[500000][100];
+int n, m;
+
+
+int hcf(int a, int b) {
+	if (b == 0) return a;
+	return hcf(b, a % b);
+}
+
+void ST_Build()
+{
+	int i, j = 0;
+	int tmp1 = 0;
+	int tmp2 = 0;
+	for (i = 1;i <= n;i++)
+		gcd[i][0] = a[i];
+	for (j = 1;j <= int(log(n) / log(2));j++)
+		for (i = 1;i + (1 << j) - 1 <= n;i++)
+		{
+			gcd[i][j] = hcf(gcd[i][j - 1], gcd[i + (1 << (j - 1))][j - 1]);
+		}
+}
+
+int ans_1(int L, int R)
+{
+	int s, res;
+	if (L == R)	return gcd[L][0];
+	else
+	{
+		s = int(log(R - L + 1) / log(2));
+		res = hcf(gcd[L][s], gcd[R + 1 - (1 << s)][s]);
+		return res;
+	}
+}
+
+
+int Left_bound(int L, int R, int value)
+{
+	int L_ori = L;
+	while (L < R)
+	{
+		int mid = L + R >> 1;
+		if (ans_1(L_ori, mid) > value)	L = mid + 1;
+		else R = mid;
+	}
+	return L;
+}
+//bug
+
+int Right_bound(int L, int R, int value,int L_o)
+{
+	int L_ori = L_o;
+	while (L < R)
+	{
+		int mid = L + R + 1 >> 1;
+		if (ans_1(L_ori, mid) < value)	R = mid - 1;
+		else L = mid;
+	}
+	return L;
+}
+
+int ans_2(int  L, int  R, int value)
+{
+	int res;
+	res = Right_bound(R, n, value,L) - Left_bound(L, R, value);
+	return res;
+}
+
+int main()
+{
+	scanf("%d%d", &n, &m);
+	int L, R;
+	for (int i = 1;i <= n;++i)	scanf("%d", &a[i]);
+	ST_Build();
+
+	while (m--)
+	{
+		scanf("%d%d", &L, &R);
+		printf("%d %d\n", ans_1(L, R), ans_2(L, R, ans_1(L, R)));
+	}
+
+}
+
+
