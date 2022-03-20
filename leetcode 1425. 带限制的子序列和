@@ -1,0 +1,32 @@
+class Solution {
+public:
+    int constrainedSubsetSum(vector<int>& nums, int k) {
+        int n = nums.size();
+        // 存储动态规划结果的数组
+        vector<int> f(n);
+        // 我们直接放入 f[0] 的值，防止处理边界情况
+        f[0] = nums[0];
+        // 单调队列
+        deque<int> q;
+        // 一开始唯一的 j 为 0
+        q.push_back(0);
+        
+        int ans = nums[0];
+        for (int i = 1; i < n; ++i) {
+            // 如果队首的 j 与 i 的差值大于 k，则不满足要求，弹出
+            while (!q.empty() && i - q.front() > k) {
+                q.pop_front();
+            }
+            // 此时队首的 j 即为最优的 j 值
+            f[i] = max(f[q.front()], 0) + nums[i];
+            ans = max(ans, f[i]);
+            // 维护队列的单调性，不断从队尾弹出元素
+            while (!q.empty() && f[i] >= f[q.back()]) {
+                q.pop_back();
+            }
+            // 将 i 作为之后的新 j 值放入队尾
+            q.push_back(i);
+        }
+        return ans;
+    }
+};
