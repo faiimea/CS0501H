@@ -1,0 +1,49 @@
+#include <iostream>
+using namespace std;
+int main()
+{
+	int Stack_push[10010];
+	int Stack_pop[10010];
+	int Stack[10010];
+	int res[10010];
+	int res_top = 0;
+	int num_push, num_pop;
+	cin >> num_push;
+	for (int i = 0;i < num_push;++i)
+		cin >> Stack_push[i];
+	cin >> num_pop;
+	for (int i = 0;i < num_pop;++i)
+		cin >> Stack_pop[i];
+	if (num_push != num_pop)
+	{
+		cout << "no";
+		return 0;
+	}
+	int top;top = 0;
+	for (int i = 0;i <num_push;++i)
+	{
+		while (top != 0 && (Stack[top-1] >= Stack_push[i]))
+		{
+			res[res_top] = Stack[top-1];
+			--top;
+			++res_top;
+		}
+		Stack[top] = Stack_push[i];
+		++top;
+	}
+	for (int i = 0;i <=  top;++i)
+	{
+		res[res_top + i] = Stack[top - i-1];
+	}
+
+	for (int i = 0;i < num_push;++i)
+	{
+		if (Stack_pop[i] != res[i])
+		{
+			cout << "no";
+			return 0;
+		}
+	}
+	cout << "yes";
+	return 0;
+}
