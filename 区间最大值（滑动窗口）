@@ -1,0 +1,60 @@
+#include <iostream>
+
+using namespace std;
+class Loc
+{
+public:
+    int line;
+    int row;
+};
+int Min(int a, int b)
+{
+    if (a < b) return a;
+    else return b;
+}
+int main() {
+    static int ori[1000][1000];
+    int n, m, a, max, min;;
+    cin >> m >> n >> a;
+    max = 0; min = 1133773;
+    Loc H_L, H_R, T_L, T_R;
+    H_R.line = T_L.row = 0;
+    H_R.row = T_L.line = T_R.line = T_R.row = a - 1;
+    for (int i = 0; i < n; ++i)
+        for (int j = 0; j < m; ++j) {
+            cin >> ori[i][j];//n is line heng,m is row shu
+            if (i < a && j < a) {
+                if (ori[i][j] > max) max = ori[i][j];
+                if (ori[i][j] < min) min = ori[i][j];
+            }
+        }
+    int line_now = a - 1; int row_now = 0;
+    bool LA = true;bool RA = true; bool direct = true;
+    while (LA || RA) {
+        if (direct) {
+            ++line_now;
+            for (int j = row_now; j < Min(row_now + a, m); ++j) {
+                if (ori[line_now][j] > max) max = ori[line_now][j];
+                if (ori[line_now][j] < min) min = ori[line_now][j];
+                //a还是a-1，麻烦
+            }
+            ++row_now;
+            if (line_now == n - 1 && row_now >= m - a) RA = false;
+            if (line_now == n - 1) { direct = false;line_now -= (a - 1); }
+        }
+        
+        if(!direct)
+        {
+            --line_now;
+            for (int j = row_now; j < Min(row_now + a, m); ++j) {
+                if (ori[line_now][j] > max) max = ori[line_now][j];
+                if (ori[line_now][j] < min) min = ori[line_now][j];
+            }
+            ++row_now;
+            if (line_now == 0 && row_now >= m - a) LA = false;
+            if (line_now == 0) { direct = true;line_now += (a - 1); }
+        }
+        
+    }
+    cout << max << min;
+}
