@@ -1,0 +1,87 @@
+#include <iostream>
+using namespace std;
+int main()
+{
+	int n, m, k;
+	cin >> n >> m >> k;
+	int Ba_value[105];
+	int Ch_cnt = 0;
+	for (int i = 0;i < n;++i)
+	{
+		cin >> Ba_value[i];
+		Ch_cnt += Ba_value[i];
+	}
+	static int A[105][100100];
+	static int B[105][100100];
+	static int Tr_value[100100];
+	static int Ch_A[100100];
+	int tmp_Tres = 0;
+	int tmp_Cres = 0;
+	int tmp_max = 0;
+	static int Pr_tr[100100];//onr line profit
+	for (int i = 0;i < n;++i)
+		for (int j = 0;j < m;++j)
+			cin >> B[i][j];
+	for (int j = 0;j < m;++j)
+	{
+		for (int i = 0;i < n;++i)
+		{
+			A[i][j]=B[i][j];
+			tmp_Tres += A[i][j]*Ba_value[i];
+			if (A[i][j] > tmp_max)	tmp_max = A[i][j];
+		}
+		Pr_tr[j] =  tmp_Tres;
+		Ch_A[j] = tmp_max;
+		tmp_Tres = 0;
+		tmp_max = 0;
+	}
+
+	static int Line[100100];
+	static int Ch_Fa[100100];
+	Line[0] = Ch_A[0];
+	int head = 0;int tail = 1;
+
+	for (int i = 0;i < m;++i)
+	{
+		while (tail > head && Ch_A[i] >= Ch_A[Line[tail - 1]]) { --tail; }
+		Line[tail] = i;	
+		++tail;
+		while (Line[head] <= i-k) { ++head; }
+		Ch_Fa[i] = Line[head];
+	}
+
+	//int head = 1;int tail = 0;
+	//for (int i = 1;i <= m;++i)
+	//{
+	//	while (head <= tail && Ch_A[i] >= Ch_A[Line[tail]])	--tail;
+	//	Line[++tail] = i;
+	//	while (Line[head] <= i - k)	++head;
+	//	if (i >= k)	Ch_Fa[i] = Ch_A[Line[head]];
+	//}
+
+	int res = 0;
+	int tmp_res = 0;
+	int tmp_Pr=0;
+	for (int i = 0;i < k;++i)	tmp_Pr += Pr_tr[i];
+	tmp_res = k * Ch_cnt * Ch_A[Ch_Fa[k - 1]] - tmp_Pr;
+        res=tmp_res;
+	int a;int b;
+	if (k == m)
+	{
+		cout << tmp_res;
+		return 0;
+	}
+	else {
+		for (int i = k;i < m;++i)
+		{
+			tmp_Pr += Pr_tr[i];
+			tmp_Pr -= Pr_tr[i - k];
+			a = k * Ch_cnt * Ch_A[Ch_Fa[i]];
+			b = tmp_Pr;
+			tmp_res = k * Ch_cnt * Ch_A[Ch_Fa[i]] - tmp_Pr;
+			if (tmp_res > res)	res = tmp_res;
+		}
+	}
+	cout << res;
+
+}
