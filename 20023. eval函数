@@ -1,0 +1,134 @@
+//#pragma warning(disable:4996)
+#include<iostream>
+#include<cstring>
+using namespace std;
+int max_size = 4E6+10;
+template<class elemType>
+class Stack
+{
+private:
+	elemType* elem;
+	int top_p;
+public:
+	Stack()
+	{
+		elem = new elemType[max_size];
+		top_p = -1;
+	}
+	~Stack()
+	{
+		delete[]elem;
+	}
+	bool isEmpty()
+	{
+		if (top_p == -1)	return true;
+		else return false;
+	}
+	void push(const elemType& x)
+	{
+		elem[++top_p] = x;
+	}
+	elemType pop()
+	{
+		return elem[top_p--];
+	}
+	elemType top()
+	{
+		return elem[top_p];
+	}
+};
+class eval
+{
+	char* toCal;
+	enum token { OPAREN, XOR, ADD, SUB, CPAREN, VALUE, EOL };
+	token getOp(int& value);
+	void BinaryOp(token op, Stack<int>& dataStack);
+public:
+	eval(char* tmp)
+	{
+		toCal = new char[strlen(tmp) + 1];
+		strcpy(toCal, tmp);
+	}
+	~eval()
+	{
+		delete toCal;
+	}
+	int getAns();
+};
+void eval::BinaryOp(token Op, Stack<int>& dataStack)
+{
+	int num1, num2;
+	num2 = dataStack.pop();
+	num1 = dataStack.pop();
+	switch (Op)
+	{
+	case XOR:dataStack.push(num1 ^ num2);break;
+	case ADD:dataStack.push(num1 + num2);break;
+	case SUB:dataStack.push(num1 - num2);break;
+	}
+}
+eval::token eval::getOp(int& value)
+{
+	while (*toCal && *toCal == ' ')	++toCal;
+	if (*toCal <= '9' && *toCal >= '0')
+	{
+		value = 0;
+		while (*toCal <= '9' && *toCal >= '0')
+		{
+			value = value * 10 + *toCal - '0';
+			++toCal;
+		}
+		return VALUE;
+	}
+	switch (*toCal)
+	{
+	case'(':++toCal;return OPAREN;
+	case'^':toCal++;return XOR;
+	case'+':++toCal;return ADD;
+	case'-':++toCal;return SUB;
+	case')':++toCal;return CPAREN;
+	}
+	return EOL; //到这一步死循环了，看一下
+}
+int eval::getAns()
+{
+	token lastOp, topOp;
+	int result_value, tmp_value;
+	Stack<token> opStack;
+	Stack<int>	dataStack;
+	char* str = toCal;
+
+	while ((lastOp = getOp(tmp_value)) != EOL)
+	{
+		switch (lastOp)
+		{
+		case VALUE:dataStack.push(tmp_value);break;
+		case CPAREN:
+			while (!opStack.isEmpty() && (topOp = opStack.pop()) != OPAREN)
+				BinaryOp(topOp, dataStack);
+			break;
+		case OPAREN:opStack.push(OPAREN);break;
+		case ADD:case SUB:
+			while (!opStack.isEmpty() && opStack.top() >= ADD)
+				BinaryOp(opStack.pop(), dataStack);
+			opStack.push(lastOp);
+			break;
+		case XOR:
+			while (!opStack.isEmpty() && opStack.top() != OPAREN)
+				BinaryOp(opStack.pop(), dataStack);
+			opStack.push(lastOp);
+			break;
+		}
+	}
+	while (!opStack.isEmpty())	BinaryOp(opStack.pop(), dataStack);
+	result_value = dataStack.pop();
+	toCal = str;
+	return result_value;
+}
+int main()
+{
+	static char ss[int(4E6+10)];
+	cin.getline(ss, int(4E6 + 10));
+	eval TMP(ss);
+	cout << TMP.getAns();
+}
