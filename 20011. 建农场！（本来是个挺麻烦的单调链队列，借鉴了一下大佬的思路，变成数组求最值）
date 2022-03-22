@@ -1,0 +1,41 @@
+#include <iostream>
+using namespace std;
+//一个双向单调队列处理进出最大最小值;
+//用链表实现，每次调用时回溯是否过载;
+int main()
+{
+	static int MAX[1005][1005];
+	static int MIN[1005][1005];
+    static int ori[1005][1005];
+    int m, n, a;
+    cin >> n >> m >> a;
+	int ans = 113377300;
+	int tmp;
+    for (int i = 1; i <= n; ++i)
+        for (int j = 1; j <= m; ++j)
+        {
+            cin >> ori[i][j];
+        }
+	for (int i = 1; i + a - 1 <= n; ++i)
+		for (int j = 1; j + a - 1 <= m; ++j) {
+			MAX[i][j] = MIN[i][j] = ori[i][j];
+			for (int k = j + 1; k < j + a; ++k) 
+			{
+				if (MIN[i][j] > ori[i][k])	MIN[i][j] = ori[i][k];
+				if (MAX[i][j] < ori[i][k])	MAX[i][j] = ori[i][k];
+			}
+		}
+	for (int i = 1; i + a - 1 <= n; ++i)
+		for (int j = 1; j + a - 1 <= m; ++j) {
+			for (int k = i + 1; k < i + a; ++k) 
+			{
+				if (MIN[i][j] > MIN[k][j])	MIN[i][j] = MIN[k][j];
+				if (MAX[i][j] < MAX[k][j])	MAX[i][j] = MAX[k][j];
+			}
+			tmp = MAX[i][j] - MIN[i][j];
+			if (tmp < ans)	ans = tmp;
+		}
+	cout << ans;
+	//honor for TALBWM
+}
+
