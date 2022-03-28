@@ -1,0 +1,67 @@
+#include <iostream>
+#include <cstring>
+using namespace std;
+struct Dict
+{
+	int ID = 0;
+	int num = 0;
+};
+const int maxn = 1e6 + 5;
+Dict tree[maxn][26];
+bool flagg[maxn];
+int tot = 0;
+
+void insert_(char* str)
+{
+	int len = strlen(str);
+	int root = 0;
+	for (int i = 0;i < len;++i)
+	{
+		int id = str[i] - 'a';
+		if (!tree[root][id].ID)	tree[root][id].ID = ++tot;
+		tree[root][id].num++;
+		root = tree[root][id].ID;
+	}
+	flagg[root] = true;
+}
+
+int find_(char* str)
+{
+	int len = strlen(str);
+	int root = 0;
+	for (int i = 0;i < len;++i)
+	{
+		int id = str[i] - 'a';
+		if (!tree[root][id].ID)	return 0;
+		root = tree[root][id].ID;
+	}
+	int res = 0;
+	if (flagg[root])	res += 1;
+	for (int i = 0;i < 26;++i)
+	{
+		res += tree[root][i].num;
+	}
+	return res;
+
+}
+
+int main()
+{
+	int ins_num, fin_num;
+	char* str;
+	str = new char[20];
+	cin >> ins_num;
+	for (int i = 0;i < ins_num;++i)
+	{
+		cin >> str;
+		insert_(str);
+	}
+	cin >> fin_num;
+	for (int i = 0;i < fin_num;++i)
+	{
+		cin >> str;
+		cout << find_(str) << endl;
+	}
+	delete str;
+	return 0;
+}
