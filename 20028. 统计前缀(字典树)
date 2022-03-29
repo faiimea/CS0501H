@@ -11,7 +11,7 @@ Dict tree[maxn][26];
 bool flagg[maxn];
 int tot = 0;
 
-void insert_(char* str)
+void insert_(char str[])
 {
 	int len = strlen(str);
 	int root = 0;
@@ -25,7 +25,7 @@ void insert_(char* str)
 	flagg[root] = true;
 }
 
-int find_(char* str)
+int find_(char str[])
 {
 	int len = strlen(str);
 	int root = 0;
@@ -48,20 +48,18 @@ int find_(char* str)
 int main()
 {
 	int ins_num, fin_num;
-	char* str;
-	str = new char[20];
+	char str[12];
 	cin >> ins_num;
 	for (int i = 0;i < ins_num;++i)
 	{
-		cin >> str;
+		scanf("%s", &str);
 		insert_(str);
 	}
 	cin >> fin_num;
 	for (int i = 0;i < fin_num;++i)
 	{
-		cin >> str;
-		cout << find_(str) << endl;
+		scanf("%s", &str);
+		printf( "%d\n",find_(str));
 	}
-	delete str;
 	return 0;
 }
