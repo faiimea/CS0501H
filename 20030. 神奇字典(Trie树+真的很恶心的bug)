@@ -1,0 +1,115 @@
+#include <iostream>
+#include <cstring>
+using namespace std;
+struct Dict
+{
+	int ID = 0;
+	int num = 0;
+};
+const int maxn = 2e6 + 5;
+Dict tree[maxn][26];
+int tot = 0;
+int times = 0;
+
+void insert_(char str[])
+{
+	int len = strlen(str);
+	int root = 0;
+	for (int i = 0;i < len;++i)
+	{
+		int id = str[i] - 'a';
+		if (!tree[root][id].num)	tree[root][id].ID = ++tot;
+		tree[root][id].num++;
+		root = tree[root][id].ID;
+	}
+}
+
+void find_(char str[])
+{
+	int len = strlen(str);
+	int root = 0;
+	for (int i = 0;i < len;++i)
+	{
+		int id = str[i] - 'a';
+		if (!tree[root][id].num)
+		{
+			cout << "No" << endl;
+			return;
+		}
+		root = tree[root][id].ID;
+	}
+	cout << "Yes" << endl;
+}
+
+int delete_loc(char str[])
+{
+	int len = strlen(str);
+	int root = 0;
+	int tmp = 0;
+	for (int i = 0;i < len-1;++i)
+	{
+		int id = str[i] - 'a';
+		if (tree[root][id].num <= 0)	return -1;
+		root = tree[root][id].ID;
+		
+	}
+	int id = str[len-1] - 'a';
+	if (tree[root][id].num <= 0)	return -1;
+	times = tree[root][id].num;
+	tree[root][id].num = 0;
+	return tree[root][id].ID;
+	//删除错误的单词的时候处理
+}
+
+void delete_(int loc)
+{
+	if (loc == -1)	return;
+	int temp;
+	for (int i = 0;i < 26;++i)
+	{
+		if (tree[loc][i].num)
+		{
+			temp = tree[loc][i].ID;
+			tree[loc][i].num = 0;
+			delete_(temp);
+		}
+	}
+	return;
+}
+
+void delete_fin(char str[])
+{
+	int len = strlen(str);
+	int root = 0;
+	int tmp = 0;
+	for (int i = 0;i < len-1;++i)
+	{
+		int id = str[i] - 'a';
+		tree[root][id].num -= times;
+		root = tree[root][id].ID;
+	}
+	times = 0;
+}
+
+int main()
+{
+	int ope_num, fin_num;
+	char ope[10];
+	char str[32];
+	cin >> ope_num;
+	while (ope_num--)
+	{
+		cin >> ope;
+		cin >> str;
+		/*scanf("%s", str);*/
+		if (ope[0] == 'i')	insert_(str);
+		else if (ope[0] == 's')	find_(str);
+		else if (ope[0] == 'd')
+		{
+			delete_(delete_loc(str));
+			delete_fin(str);
+		}
+	}
+	
+	return 0;
+}
