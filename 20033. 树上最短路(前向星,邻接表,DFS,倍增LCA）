@@ -1,0 +1,111 @@
+#include <iostream>
+using namespace std;
+
+const int maxn = 100010;
+int Head[maxn];
+int Next[maxn << 1];
+int Value[maxn << 1];
+int Goa[maxn << 1];
+int Depth[maxn];
+int ID[maxn][30];
+int Length[maxn][30];
+int tot = 0;
+int n, m;
+int num;
+
+void Insert(int x, int y, int len)
+{
+	Goa[++tot] = y;
+	Value[tot] = len;
+	Next[tot] = Head[x];
+	Head[x] = tot;
+}
+//前向星构造邻接表，板子
+
+void DFS(int cur, int fat)
+{
+	for (int i = Head[cur];i;i = Next[i])
+	{
+		int dur = Goa[i];
+		if (dur == fat)	continue;
+		ID[dur][0] = cur;
+		Length[dur][0] = Value[i];
+		Depth[dur] = Depth[cur] + 1;
+		DFS(dur, cur);
+	}
+}
+//前向星遍历+初次dfs
+
+void LCA(int x, int y)
+{
+	int res = 0;
+	for (int i = 20;i >= 0;--i)
+	{
+		if (Depth[ID[y][i]] >= Depth[x])
+		{
+			res += Length[y][i];
+			y = ID[y][i];
+		}
+	}
+	if (x == y)
+	{
+		cout << res << endl;
+		return;
+	}
+	for (int i = 20;i >= 0;--i)
+	{
+		if (ID[x][i] != ID[y][i])
+		{
+			res += Length[x][i];
+			res += Length[y][i];
+			x = ID[x][i];
+			y = ID[y][i];
+		}
+	}
+	if (ID[x][0] == ID[y][0])
+	{
+		res += Length[x][0];
+		res += Length[y][0];
+		cout << res << endl;
+		return;
+	}
+}
+//倍增法LCA
+
+int main()
+{
+	int x, y, len;
+	cin >> n >> m;
+	for (int i = 1;i <= m;++i)
+	{
+		cin >> x >> y >> len;
+		Insert(x, y, len);
+		Insert(y, x, len);
+		//实在是有点...
+	}
+	Depth[1] = 1;
+	DFS(1, -1);
+	for(int i=1;i<=20;++i)
+		for (int j = 1;j <= n;++j)
+		{
+			ID[j][i] = ID[ID[j][i - 1]][i - 1];
+			Length[j][i] = Length[j][i - 1] + Length[ID[j][i - 1]][i - 1];
+		}
+	//倍增法
+	cin >> num;
+	int a, b;
+	int tmp;
+	for (int i = 0;i < num;++i)
+	{
+		cin >> a >> b;
+		if(Depth[a]>Depth[b])
+		{ 
+			tmp = a;
+			a = b;
+			b = tmp;
+		}
+		LCA(a, b);
+	}
+	return 0;
+
+}
