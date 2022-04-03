@@ -1,0 +1,152 @@
+#include <iostream>
+using namespace std;
+
+const int maxn = 50010;
+int Head[maxn];
+int Next[maxn << 1];
+int Value[maxn << 1];
+int Goa[maxn << 1];
+int Depth[maxn];
+int ID[maxn][30];
+int Length[maxn][30];
+int tot = 0;
+int n, Q;
+int num;
+
+void Insert(int x, int y, int len)
+{
+	Goa[++tot] = y;
+	Value[tot] = len;
+	Next[tot] = Head[x];
+	Head[x] = tot;
+}
+//前向星构造邻接表，板子
+
+void DFS(int cur, int fat)
+{
+	for (int i = Head[cur];i;i = Next[i])
+	{
+		int dur = Goa[i];
+		if (dur == fat)	continue;
+		ID[dur][0] = cur;
+		Length[dur][0] = Value[i];
+		Depth[dur] = Depth[cur] + 1;
+		DFS(dur, cur);
+	}
+
+}
+
+//前向星遍历+初次dfs
+int tmp;
+int GetLca(int x, int y)
+{
+	if (Depth[x] > Depth[y])
+	{
+		tmp = x;
+		x = y;
+		y = tmp;
+	}
+	for (int i = 20;i >= 0;--i)
+	{
+		if (Depth[ID[y][i]] >= Depth[x])
+		{
+			y = ID[y][i];
+		}
+	}
+	if (x == y)
+	{
+		return x;
+	}
+	for (int i = 20;i >= 0;--i)
+	{
+		if (ID[x][i] != ID[y][i])
+		{
+			x = ID[x][i];
+			y = ID[y][i];
+		}
+	}
+	if (ID[x][0] == ID[y][0])
+	{
+		return	ID[x][0];
+	}
+}
+
+int  LCA(int x, int y)
+{
+	if(Depth[x]>Depth[y])
+	{ 
+		tmp = x;
+		x = y;
+		y = tmp;
+	}
+	int res = 0;
+	for (int i = 20;i >= 0;--i)
+	{
+		if (Depth[ID[y][i]] >= Depth[x])
+		{
+			res += Length[y][i];
+			y = ID[y][i];
+		}
+	}
+	if (x == y)
+	{
+		return res;
+	}
+	for (int i = 20;i >= 0;--i)
+	{
+		if (ID[x][i] != ID[y][i])
+		{
+			res += Length[x][i];
+			res += Length[y][i];
+			x = ID[x][i];
+			y = ID[y][i];
+		}
+	}
+	if (ID[x][0] == ID[y][0])
+	{
+		res += Length[x][0];
+		res += Length[y][0];
+		return res;
+	}
+}
+//倍增法LCA
+
+int main()
+{
+	int a, b, len;
+	int x, y, z;
+	cin >> n;
+	for (int i = 0;i < n-1;++i)
+	{
+		scanf("%d%d%d", &a, &b, &len);
+		Insert(a, b, len);
+		Insert(b, a, len);
+	}
+	Depth[1] = 1;
+	DFS(1, -1);
+	for(int i=1;i<=20;++i)
+		for (int j = 1;j <= n;++j)
+		{
+			ID[j][i] = ID[ID[j][i - 1]][i - 1];
+			Length[j][i] = Length[j][i - 1] + Length[ID[j][i - 1]][i - 1];
+		}
+	//倍增法
+	cin >> Q;
+	int Lxy, Lyz, Lxz;
+	int res;
+	for (int i = 0;i < Q;++i)
+	{
+		scanf("%d%d%d", &x, &y, &z);
+		Lxy = GetLca(x, y);
+		Lyz = GetLca(y, z);
+		Lxz = GetLca(x, z);
+		int res1 = LCA(Lxy, x) + LCA(Lxy, y) + LCA(Lxy, z);
+		int res2 = LCA(Lyz, x) + LCA(Lyz, y) + LCA(Lyz, z);
+		int res3 = LCA(Lxz, x) + LCA(Lxz, y) + LCA(Lxz, z);
+		res = min(min(res1, res2), res3);
+		printf("%d\n", res);
+	}
+
+	return 0;
+
+}
