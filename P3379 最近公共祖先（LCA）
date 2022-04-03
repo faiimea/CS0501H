@@ -1,0 +1,82 @@
+#include <iostream>
+using namespace std;
+const int maxn = 500000;
+struct Elem
+{
+    int goal;
+    int next;
+}Dict[maxn << 1];
+int head[maxn];
+int tot;
+int depth[maxn];
+int Father[maxn<<1][30];
+int dur;
+
+void add(int x, int y)
+{
+    Dict[++tot].goal = y; //该边的终点
+    Dict[tot].next = head[x]; //与该边同一起点的上一条边
+    head[x] = tot;  //以x为起点的最后一条边
+}
+
+void dfs(int cur, int fat)
+{
+    for (int i = head[cur];i;i = Dict[i].next)
+    {
+        dur = Dict[i].goal;
+        if (dur == fat)  continue;
+        Father[dur][0] = cur;
+        depth[dur] = depth[cur] + 1;
+        dfs(dur, cur);
+    }
+}
+
+int LCA(int x, int y)
+{
+    if (depth[x] > depth[y]) swap(x, y);
+    for (int i = 20;i >= 0;--i)
+    {
+        if (depth[Father[y][i]] >= depth[x])
+            y = Father[y][i];
+    }
+    if (x == y)  return x;
+    for (int i = 20;i >= 0;--i)
+    {
+        if (Father[x][i] != Father[y][i])
+        {
+            x = Father[x][i];
+            y = Father[y][i];
+        }
+    }
+    if (Father[x][0] == Father[y][0])
+        return Father[x][0];
+    return x;
+}
+
+int main()
+{
+    int n, m, s;
+    int x, y;
+    scanf("%d%d%d", &n, &m, &s);
+    for (int i = 0;i < n - 1;++i)
+    {
+        scanf("%d%d", &x, &y);
+        add(x, y);
+        add(y, x);
+    }
+    depth[s] = 1;
+    dfs(s, -1);
+    for (int i = 1;i <= 20;++i)
+    {
+        for (int j = 1;j <= n;++j)
+        {
+            Father[j][i] = Father[Father[j][i - 1]][i - 1];
+        }
+    }
+    for (int i = 0;i < m;++i)
+    {
+        scanf("%d%d", &x, &y);
+        printf("%d\n", LCA(x, y));
+    }
+    return 0;
+}
