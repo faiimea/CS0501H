@@ -124,6 +124,7 @@ int main()
 	}
 	Depth[1] = 1;
 	DFS(1, -1);
+	//这里很重要，深度初始值不为0+dfs的初始fat为0
 	for(int i=1;i<=20;++i)
 		for (int j = 1;j <= n;++j)
 		{
