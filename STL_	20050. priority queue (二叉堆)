@@ -1,0 +1,145 @@
+#ifndef SJTU_PRIORITY_QUEUE_HPP
+#define SJTU_PRIORITY_QUEUE_HPP
+#include <cstddef>
+#include <functional>
+#include "exceptions.hpp"
+
+namespace sjtu {
+
+	/**
+	 * a container like std::priority_queue which is a heap internal.
+	 */
+	template<typename T, class Compare = std::less<T>>
+	class priority_queue {
+
+	public:
+		int currentSize;
+		T* array;
+		int maxSize;
+		Compare comparator;
+		void doubleSpace()
+		{
+			maxSize *= 2;
+			T* tmp = array;
+			/*array = (T*)malloc(maxSize * sizeof(T));*/
+			array = (T*) operator new (sizeof(T) * maxSize);
+			memset(array, 0, maxSize * sizeof(T));
+			memcpy(array, tmp, (currentSize + 1) * sizeof(T));
+			//memset(tmp, 0, maxSize * sizeof(T)/2);
+			//for (int i = 0;i <= currentSize;++i)
+			//	tmp[i].~T();
+			operator delete(tmp);
+		}
+
+		void percolateDown(int hole)
+		{
+			int child;
+			T tmp = array[hole];
+			for (;hole * 2 <= currentSize;hole = child)
+			{
+				child = hole * 2;
+				if (child != currentSize && comparator(array[child ], array[child+1]))
+					child++;
+				if (comparator(tmp,array[child]))  array[hole] = array[child];
+				else break;
+			}
+			array[hole] = tmp;
+			/*tmp.~T();*/
+		}
+
+		/**
+		 * TODO constructors
+		 */
+		priority_queue()
+		{
+			currentSize = 0;
+			maxSize = 100;
+			array = (T*) operator new (sizeof(T) * maxSize);
+			memset(array, 0, maxSize * sizeof(T));
+		}
+		priority_queue(const priority_queue& other)
+		{
+			currentSize = other.currentSize;
+			maxSize = other.maxSize;
+			array = (T*) operator new (sizeof(T) * maxSize);
+			memset(array, 0, maxSize * sizeof(T));
+			for (int i = 1;i <= currentSize;++i)
+				array[i] = other.array[i];
+		}
+		/**
+		 * TODO deconstructor
+		 */
+		~priority_queue()
+		{
+			for (int i = 0;i <= currentSize;++i)
+				array[i].~T();
+			operator delete(array);
+		}
+		/**
+		 * TODO Assignment operator
+		 */
+		priority_queue& operator=(const priority_queue& other)
+		{
+			if (this == &other)  return *this;
+			for (int i = 0;i <= currentSize;++i)
+				array[i].~T();
+			operator delete(array);
+			currentSize = other.currentSize;
+			maxSize = other.maxSize;
+			array = (T*) operator new (sizeof(T) * maxSize);
+			memset(array, 0, maxSize * sizeof(T));
+			for (int i = 1;i <= currentSize;++i)
+				array[i] = other.array[i];
+			return *this;
+		}
+		/**
+		 * get the top of the queue.
+		 * @return a reference of the top element.
+		 * throw container_is_empty if empty() returns true;
+		 */
+		const T& top() const {
+			if (currentSize == 0)  throw container_is_empty();
+			return array[1];
+		}
+		/**
+		 * TODO
+		 * push new element to the priority queue.
+		 */
+		void push(const T& e) {
+			if (currentSize == maxSize - 1)  doubleSpace();
+			int hole = ++currentSize;
+			for (;hole > 1 && comparator(array[hole / 2],e);hole /= 2)
+				array[hole] = array[hole / 2];
+			array[hole] = e;
+		}
+		/**
+		 * TODO
+		 * delete the top element.
+		 * throw container_is_empty if empty() returns true;
+		 */
+		void pop() {
+			if (currentSize == 0)  throw container_is_empty();
+			array[1] = array[currentSize];
+			array[currentSize].~T();
+			currentSize--;
+			percolateDown(1);
+		}
+		/**
+		 * return the number of the elements.
+		 */
+		size_t size() const {
+			return currentSize;
+		}
+		/**
+		 * check if the container has at least an element.
+		 * @return true if it is empty, false if it has at least an element.
+		 */
+		bool empty() const {
+			if (currentSize) return false;
+			else return true;
+		}
+	};
+
+}
+
+#endif
