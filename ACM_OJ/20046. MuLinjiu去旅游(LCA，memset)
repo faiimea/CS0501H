@@ -1,0 +1,114 @@
+#include <iostream>
+#include <cstring>
+using namespace std;
+const int maxn = 400010;
+int Head[maxn];
+int Next[maxn << 1];
+int Goa[maxn << 1];
+int Depth[maxn];
+int ID[maxn][30];
+int tot = 0;
+int n, m;
+int num;
+
+void Insert(int x, int y)
+{
+	Goa[++tot] = y;
+	Next[tot] = Head[x];
+	Head[x] = tot;
+}
+
+void DFS(int cur, int fat)
+{
+	for (int i = Head[cur];i;i = Next[i])
+	{
+		int dur = Goa[i];
+		if (dur == fat)	continue;
+		ID[dur][0] = cur;
+		Depth[dur] = Depth[cur] + 1;
+		DFS(dur, cur);
+	}
+}
+
+int LCA(int x, int y)
+{
+	if (Depth[x] > Depth[y]) swap(x, y);
+	for (int i = 20;i >= 0;--i)
+	{
+		if (Depth[ID[y][i]] >= Depth[x])  y = ID[y][i];
+	}
+	if (x == y) return x;
+
+	for (int i = 20;i >= 0;--i)
+	{
+		if (ID[x][i] != ID[y][i])
+		{
+			x = ID[x][i];
+			y = ID[y][i];
+		}
+	}
+	if (ID[x][0] == ID[y][0]) return ID[x][0];
+}
+
+int main()
+{
+	int T;
+	scanf("%d", &T);
+	for (int t = 0;t < T;++t)
+	{
+		tot = 0;
+		memset(Head, 0, sizeof(Head));
+		memset(Next, 0, sizeof(Next));
+		memset(Goa, 0, sizeof(Goa));
+		memset(Depth, 0, sizeof(Depth));
+		memset(ID, 0, sizeof(ID));
+		int x, y;
+		scanf("%d%d", &n, &m);
+		for (int i = 1;i < n;++i)
+		{
+			scanf("%d%d", &x, &y);
+			Insert(x, y);
+			Insert(y, x);
+		}
+		Depth[1] = 1;
+		DFS(1, -1);
+		for (int i = 1;i <= 20;++i)
+			for (int j = 1;j <= n;++j)
+			{
+				ID[j][i] = ID[ID[j][i - 1]][i - 1];
+			}
+		//倍增法
+		int a, b;
+		int c, d;
+		int l1, l2;
+		for (int i = 0;i < m;++i)
+		{
+			scanf("%d%d", &a, &b);
+			scanf("%d%d", &c, &d);
+			l1 = LCA(a, b);
+			l2 = LCA(c, d);
+
+
+			if (l1 == l2)
+			{
+				printf("YES\n");
+				continue;
+			}
+			else if (Depth[l1] > Depth[l2])
+			{
+				if (LCA(l1, c) == l1 || LCA(l1, d) == l1)
+					printf("YES\n");
+				else  printf("NO\n");
+			}
+			else
+			{
+				if (LCA(l2, a) == l2 || LCA(l2, b) == l2)
+					printf("YES\n");
+				else  printf("NO\n");
+			}
+		}
+		
+	}
+	return 0;
+
+}
