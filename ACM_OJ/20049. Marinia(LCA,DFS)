@@ -1,0 +1,191 @@
+#include <iostream>
+#include <cstring>
+using namespace std;
+
+const int maxn = 100010;
+int Head[maxn];
+int Next[maxn << 1];
+int Value[maxn << 1][33];
+int Goa[maxn << 1];
+int Depth[maxn];
+int ID[maxn][30];
+int Trip[maxn][30][33];
+int Uzi[maxn][33];
+int tot = 0;
+int n, m;
+int need[33];
+
+void Insert(int x, int y)
+{
+	Goa[++tot] = y;
+	for (int i = 0;i < 33;++i)
+	{
+		Value[tot][i] = Uzi[x][i] + Uzi[y][i];
+	}
+	Next[tot] = Head[x];
+	Head[x] = tot;
+}
+
+void DFS(int cur, int fat)
+{
+	for (int i = Head[cur];i;i = Next[i])
+	{
+		int dur = Goa[i];
+		if (dur == fat)	continue;
+		ID[dur][0] = cur;
+		/*Length[dur][0] = Value[i];*/
+		for (int j = 0;j < 33;++j)
+		{
+			Trip[dur][0][j] = Value[i][j];
+		}
+		Depth[dur] = Depth[cur] + 1;
+		DFS(dur, cur);
+	}
+}
+
+void DFS2()
+{
+	for (int i = 1;i <= 20;++i)
+		for (int j = 1;j <= n;++j)
+		{
+			ID[j][i] = ID[ID[j][i - 1]][i - 1];
+			for (int t = 0;t < 33;++t)
+			{
+				Trip[j][i][t] = Trip[j][i - 1][t] + Trip[ID[j][i - 1]][i - 1][t];
+			}
+		}
+	for (int i = 0;i < 33;++i)
+	{
+		Trip[1][0][i] = Uzi[1][i];
+	}
+}
+
+void Buy(int a, int b)
+{
+	for (int i = 0;i < 33;++i)
+	{
+		need[i] -= Trip[a][b][i];
+	}
+}
+
+void LCA(int x, int y)
+{
+	if (Depth[x] > Depth[y])	swap(x, y);
+	int res = 0;
+	//look
+	for (int i = 20;i >= 0;--i)
+	{
+		if (Depth[ID[y][i]] >= Depth[x])
+		{
+			/*res += Length[y][i];*/
+			Buy(y, i);
+			y = ID[y][i];
+		}
+	}
+	if (x == y)
+	{
+		return;
+	}
+	//look
+	for (int i = 20;i >= 0;--i)
+	{
+		if (ID[x][i] != ID[y][i])
+		{
+			/*res += Length[x][i];
+			res += Length[y][i];*/
+			Buy(x, i);
+			Buy(y, i);
+			x = ID[x][i];
+			y = ID[y][i];
+		}
+	}
+	if (ID[x][0] == ID[y][0])
+	{
+		/*res += Length[x][0];
+		res += Length[y][0];*/
+		Buy(x, 0);
+		Buy(y, 0);
+		return;
+	}
+}
+
+void Judge()
+{
+	for (int k = 0;k < 33;++k)
+	{
+		if (need[k]>0)
+		{
+			cout << "NO" << endl;
+			return;
+		}
+	}
+	cout << "YES" << endl;
+	return;
+}
+
+int Judge1(int a,int b,int tmp)
+{
+	for (int k = 0;k < 33;++k)
+	{
+		if (need[k] && (Uzi[a][k] || Uzi[b][k]))
+		{
+			--tmp;
+		}
+	}
+	return tmp;
+}
+
+int main()
+{
+	int x, y, len;
+	int t;
+	cin >> n >> m;
+	int temp;
+	for (int i = 1;i <= n;++i)
+	{
+		cin >> t;
+		for (int j = 0;j < t;++j)
+		{
+			cin >> temp;
+			++Uzi[i][temp];
+		}
+	}
+	for (int i = 1;i < n;++i)
+	{
+		cin >> x >> y;
+		Insert(x, y);
+		Insert(y, x);
+	}
+	Depth[1] = 1;
+	DFS(1, -1);
+	DFS2();
+	int k;
+	cin >> k;
+	int a, b;
+	int t_n;
+	int tmp;
+	for (int i = 0;i < k;++i)
+	{
+		cin >> a >> b>>t_n;
+		for (int j = 0;j < t_n;++j)
+		{
+			cin >> tmp;
+			++need[tmp];
+		}
+		if (a == b)
+		{
+			
+			if (!Judge1(a,b,t_n))
+				cout << "YES" << endl;
+			else cout << "NO" << endl;
+		}
+		else
+		{
+			LCA(a, b);
+			Judge();
+		}
+ 		memset(need, 0, sizeof(need));
+	}
+	return 0;
+
+}
