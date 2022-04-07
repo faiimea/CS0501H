@@ -1,0 +1,125 @@
+#include <iostream>
+#include <cstring>
+const int type = 26;
+const int maxn = 1e6+10;
+char str[maxn];
+struct node
+{
+	node* fail;
+	node* next[type];
+	int cnt;
+	node()
+	{
+		fail = nullptr;
+		cnt = 0;
+		memset(next, 0, sizeof(next));
+		/*for (int i = 0;i < 26;++i)
+			next[i] = 0;*/
+	}
+	//node构造
+}*q[maxn<<1];
+int head, tail;
+
+void Build(char* str, node* root)
+{
+	node* p = root;
+	int i = 0;
+	int index;
+	while (str[i])
+	{
+		index = str[i] - 'a';
+		if (p->next[index] == nullptr)
+			p->next[index] = new node();
+		p = p->next[index];
+		++i;
+	}
+	p->cnt++;
+}
+
+void BFS_KMP(node* root)
+{
+	int i;
+	root->fail = nullptr;
+	q[head++] = root;
+	//队列BFS实现KMP
+	while (head != tail)
+	{
+		node* temp = q[tail++];
+		node* p = nullptr;
+		for (i = 0;i < 26;++i)
+		{
+			if (temp->next[i] != nullptr)
+			{
+				if (temp == root)
+					temp->next[i]->fail = root;
+				else
+				{
+					p = temp->fail;
+					while (p != nullptr)
+					{
+						if (p->next[i] != nullptr)
+						{
+							temp->next[i]->fail = p->next[i];break;
+						}
+						p = p->fail;
+					}
+					if (p == nullptr)
+						temp->next[i]->fail = root;
+					//这一套和老KMP其实是一样的
+				}
+				q[head++] = temp->next[i];
+				//BFS存储新的节点
+			}
+		}
+	}
+}
+
+int query(char* str, node* root)
+{
+	int len = strlen(str);
+	int index = 0;
+	int num;
+	num = 0;
+	node* p = root;
+	int i = 0;
+	while (str[i])
+	{
+		index = str[i] - 'a';
+		while (p->next[index] == nullptr && p != root)
+			p = p->fail;
+		p = p->next[index];
+		if (p == nullptr) p = root;
+		//从有效点开始
+
+		node* temp = p;
+		while (temp != root)
+		{
+			/*num += temp->cnt;*/
+			if (temp->cnt > 0)
+				return 1;
+			temp = temp->fail;
+		}
+		//以有效点与其他浅于该点的作为名字结尾的点的数量
+		++i;
+	}
+	return 0;
+}
+
+using namespace std;
+int main()
+{
+	int n;
+	cin >> n;
+	int head = tail = 0;
+	node* root = new node();
+	while (n--)
+	{
+		scanf("%s", str);
+		Build(str, root);
+	}
+	BFS_KMP(root);
+	/*cin >> str;*/
+	scanf("%s", str);
+	if (query(str, root))	printf("valar morghulis");
+	else printf("valar dohaeris");
+}
