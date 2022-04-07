@@ -1,0 +1,110 @@
+#include <iostream>
+#include <cstring>
+const int maxn = 1e6 + 10;
+const int tp = 26;
+struct node
+{
+	int son[tp];
+	int next;
+	bool end;
+	node()
+	{
+		next = 0;
+		end = false;
+		memset(son, 0, sizeof(son));
+	}
+}tr[maxn];
+int root = 0;
+int cnt = 0;
+char str[maxn];
+char let[maxn];
+int q[maxn];
+int head, tail;
+void insert()
+{
+	int now = root;
+	int index;
+	for (int i = 0;i < strlen(str);++i)
+	{
+		index = str[i] - 'a';
+		if (!tr[now].son[index])	tr[now].son[index] = ++cnt;
+		now = tr[now].son[index];
+	}
+	tr[now].end = true;
+	for (int i = 0;i < strlen(str);++i)
+		str[i] = 0;
+}
+
+void bfs()
+{
+	tail = 1;
+	head = 0;
+	tr[0].next = -1;
+	for (int i = 0;i < 26;++i)
+	{
+		if (tr[root].son[i])
+		{
+			tr[tr[root].son[i]].next = root;//KMP
+			q[++head] = tr[root].son[i];//进队
+		}
+	}
+	while (tail <= head)
+	{
+		int qn = q[tail];
+		tail++;
+		int trf = tr[qn].next;
+		for (int i = 0;i < 26;++i)
+		{
+			if (!tr[qn].son[i])	continue;
+			while (trf != -1 && (!tr[trf].son[i]))
+				trf = tr[trf].next;//移动
+			if (trf == -1)
+				tr[tr[qn].son[i]].next = root;
+			else
+				tr[tr[qn].son[i]].next = tr[trf].son[i];
+			head++;
+			q[head] = tr[qn].son[i];
+		}
+	}
+}
+
+bool KMP()
+{
+	int tmp;
+	int n = root;
+	for (int i = 0;i < strlen(let);++i)
+	{
+		tmp = let[i] - 'a';
+		while (n != -1 && (!tr[n].son[tmp]))
+			n = tr[n].next;
+		if (n == -1)
+		{
+			n = root;
+			continue;
+		}
+		n = tr[n].son[tmp];
+		if (tr[n].end)	return true;
+	}
+	return false;
+}
+
+using namespace std;
+int main()
+{
+	int n;
+	cin >> n;
+	root = 0;cnt = 1;
+	for (int i = 0;i < n;++i)
+	{
+		/*scanf_s("%s", &str);*/
+		cin >> str;
+		insert();
+	}
+	bfs();
+	/*scanf_s("%s", &let);*/
+	cin >> let;
+	if (KMP())
+		printf("valar morghulis");
+	else
+		printf("valar dohaeris");
+}
