@@ -1,0 +1,190 @@
+#ifndef SJTU_PRIORITY_QUEUE_HPP
+#define SJTU_PRIORITY_QUEUE_HPP
+
+#include <cstddef>
+#include <functional>
+#include "exceptions.hpp"
+
+
+namespace sjtu {
+	//左堆，可以允许merge的O（logN）复杂度
+	/**
+	 * a container like std::priority_queue which is a heap internal.
+	 */
+	template<typename T, class Compare = std::less<T>>
+	class priority_queue {
+	public:
+
+		Compare comparator;
+		struct node
+		{
+			T key;
+			int npl;
+			node* left;
+			node* right;
+			node(T value, node* l, node* r) :key(value), npl(0),left(l),right(r){}
+		};
+		node* mRoot;
+		int currentSize=0;
+
+		void swapnode(node*& x, node*& y)
+		{
+			node* tmp = x;
+			x = y;
+			y = tmp;
+		}
+
+		void destroy(node* &heap)
+		{
+			if (heap == NULL)	return;
+			if (heap->left != NULL)		destroy(heap->left);
+			if (heap->right != NULL)	destroy(heap->right);
+			/*heap->key.~T();*/
+			delete heap;
+		}
+
+		node* copy(node* ori)
+		{
+			node* Node_now;
+			Node_now = new node(ori->key, ori->left, ori->right);
+			Node_now->npl = ori->npl;
+			return Node_now;
+		}
+
+		node* COPY_(node* ori)
+		{
+			if (ori == NULL)	return NULL;
+			node* Node_now;
+			Node_now = copy(ori);
+			if (ori == NULL)	return NULL;
+			if (ori->left != NULL)	Node_now->left = COPY_(ori->left);
+			if (ori->right != NULL)	Node_now->right = COPY_(ori->right);
+			return Node_now;
+		}
+			
+
+		node* Merge(node*& x, node*& y)
+		{
+			if (x == NULL)	return y;
+			if (y == NULL)	return x;
+			if (comparator(x->key , y->key))	swapnode(x, y);
+			x->right = Merge(x->right, y);
+			if (x->left == NULL || x->left->npl < x->right->npl)
+			{
+				node* tmp = x->left;
+				x->left = x->right;
+				x->right = tmp;
+			}
+			if (x->right == NULL || x->left == NULL)
+				x->npl = 0;
+			else
+				x->npl = (x->left->npl > x->right->npl) ? (x->right->npl + 1) : (x->left->npl + 1);
+
+			return x;
+		}
+
+		/**
+		 * TODO constructors
+		 */
+		priority_queue() 
+		{
+			mRoot = NULL;
+		}
+		priority_queue(const priority_queue& other) 
+		{
+			currentSize = other.currentSize;
+			mRoot = COPY_(other.mRoot);
+		}
+		/**
+		 * TODO deconstructor
+		 */
+		~priority_queue() 
+		{
+			destroy(mRoot);
+		}
+		/**
+		 * TODO Assignment operator
+		 */
+		priority_queue& operator=(const priority_queue& other) 
+		{
+			currentSize = other.currentSize;
+			if (this == &other)	return *this;
+			destroy(mRoot);
+			mRoot = COPY_(other.mRoot);
+			return *this;
+		}
+		/**
+		 * get the top of the queue.
+		 * @return a reference of the top element.
+		 * throw container_is_empty if empty() returns true;
+		 */
+		const T& top() const 
+		{
+			if (currentSize == 0)  throw container_is_empty();
+			return mRoot->key;
+		}
+		/**
+		 * TODO
+		 * push new element to the priority queue.
+		 */
+		void push(const T& e) 
+		{
+			++currentSize;
+			node* Node_now;
+			Node_now = new node(e, NULL, NULL);
+			if (mRoot == NULL)
+			{
+				mRoot = Node_now;
+				return;
+			}
+			Merge(mRoot, Node_now);
+		}
+		/**
+		 * TODO
+		 * delete the top element.
+		 * throw container_is_empty if empty() returns true;
+		 */
+		void pop() 
+		{
+			if (currentSize == 0)  throw container_is_empty();
+			--currentSize;
+			node* l = mRoot->left;
+			node* r = mRoot->right;
+			delete mRoot;
+			mRoot = Merge(l, r);
+		}
+		/**
+		 * return the number of the elements.
+		 */
+		size_t size() const 
+		{
+			return currentSize;
+		}
+		/**
+		 * check if the container has at least an element.
+		 * @return true if it is empty, false if it has at least an element.
+		 */
+		bool empty() const 
+		{
+			return (currentSize == 0);
+		}
+		/**
+		 * merge two priority_queues with at least O(logn) complexity.
+		 * clear the other priority_queue.
+		 */
+		void merge(priority_queue& other) 
+		{
+			if (this == &other)	return;
+			currentSize += other.currentSize;
+			other.currentSize = 0;
+			/*node* tmp = other.mRoot;*/
+			mRoot = Merge(mRoot, other.mRoot);
+			other.mRoot = NULL;
+			//这里会不会内存泄漏呢;
+			/*destroy(tmp);*/
+		}
+	};
+
+}
+
+#endif
