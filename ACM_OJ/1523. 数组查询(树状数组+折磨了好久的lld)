@@ -1,0 +1,37 @@
+#include<iostream>
+using namespace std;
+long long int n, q, m, x, y, tree[500005];
+long long int a[500005];
+long long int lowbit(long long int x) {return x & -x;}
+void add(long long int now, long long int num)
+{
+	for (long long int i = now;i <= n;i += lowbit(i)) tree[i] += num;
+}
+long long int query(long long int s) {
+	long long int ans = 0;
+	for (long long int i = s;i >= 1;i -= lowbit(i)) ans += tree[i];
+	return ans;
+}
+int main() {
+	long long int temp;
+	long long int k;
+	scanf("%lld%lld", &n, &q);
+
+	for (long long int i = 1;i <= n;i++) {
+		scanf("%lld", &a[i]);
+	}
+	for (long long int i = 1;i <= q;i++) {
+		scanf("%lld", &temp);
+		if (temp == 1)
+		{
+			scanf("%lld%lld%lld",  &x, &y,&k);
+			add(x, k);
+			add(y + 1, -k);
+		}
+		else
+		{
+			scanf("%lld", &x);
+			printf("%lld\n", a[x] + query(x)); 
+		}
+	}
+}
