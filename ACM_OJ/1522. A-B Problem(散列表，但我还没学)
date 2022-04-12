@@ -1,0 +1,60 @@
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const int maxn = 2e5 + 10;
+int n, c;
+int a[maxn];
+int main()
+{
+	cin >> n >> c;
+	int res = 0;
+
+	for (int i = 1;i <= n;++i)	cin >> a[i];
+	sort(a + 1, a + n + 1);
+	
+	int head, tail;
+	head = tail = 1;
+	int temp;
+	int tnum, hnum;
+	tnum = hnum = 1;
+	c = abs(c);
+	if (c == 0)
+	{
+		cout << "-1";
+		return 0;
+	}
+	while (head != n)
+	{
+
+		if (tail == head)
+		{
+			head++;
+			continue;
+		}
+		temp = a[head] - a[tail];
+		if (temp < c)	head++;
+		else if (temp == c)
+		{
+			//越界判断
+			while (tail<n&&a[tail + 1] == a[tail])
+			{
+				++tnum;++tail;
+			}
+			while (head<n&&a[head + 1] == a[head])
+			{
+				++hnum;++head;
+			}
+			res += (hnum)*tnum;
+			tnum = hnum = 1;
+			if(head<n)++head;//?
+		}
+		else tail++;
+	}
+
+	while (head<=n&&tail<=n&&a[head] - a[tail] >= c)
+	{
+		++tail;
+		if (a[head] - a[tail] == c)	res++;
+	}
+	cout << res;
+}
