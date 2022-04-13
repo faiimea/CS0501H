@@ -1,0 +1,136 @@
+#include <iostream>
+using namespace std;
+int n;
+int m;
+const int maxn = 1e5 + 5;
+double ori[maxn];
+struct node
+{
+	int l, r;
+	double sum, lazy;
+	double ave, squ;
+}a[4 * maxn + 5];
+
+void update(int k)
+{
+	a[k].sum = (a[k * 2].sum + a[k * 2 + 1].sum);//sum
+	a[k].squ = a[k * 2].squ + a[k * 2 + 1].squ;//squ
+	return;
+}
+
+void PushDown(int p)
+{
+	if (a[p].lazy) {
+		a[p * 2].squ += ((a[p].lazy * a[p].lazy * (a[p * 2].r - a[p * 2].l + 1)) + 2 * a[p * 2].sum * a[p].lazy);
+		a[p * 2 + 1].squ += ((a[p].lazy * a[p].lazy * (a[p * 2 + 1].r - a[p * 2 + 1].l + 1)) + 2 * a[p * 2 + 1].sum * a[p].lazy);
+		//squ
+		a[p * 2].sum += a[p].lazy * (a[p * 2].r - a[p * 2].l + 1);
+		a[p * 2 + 1].sum += a[p].lazy * (a[p * 2 + 1].r - a[p * 2 + 1].l + 1);
+		//sum
+		a[p * 2].lazy += a[p].lazy;
+		a[p * 2 + 1].lazy += a[p].lazy;
+		a[p].lazy = 0;
+	}
+	return;
+}
+
+void ChangeSegment(int k, int l, int r, double x)
+{
+
+	if (a[k].l >= l && a[k].r <= r)
+	{
+		a[k].squ += ((a[k].r - a[k].l + 1) * x * x + 2 * a[k].sum * x);
+		a[k].sum += (a[k].r - a[k].l + 1) * x;
+		a[k].lazy += x;
+		return;
+	}
+	PushDown(k);
+	int mid = (a[k].l + a[k].r) / 2;
+	if (l <= mid)	ChangeSegment(k * 2, l, r, x);
+	if (r > mid)	ChangeSegment(k * 2 + 1, l, r, x);
+	update(k);
+	return;
+}
+
+
+void build(int k, int l, int r)
+{
+	a[k].l = l;
+	a[k].r = r;
+	if (l == r)
+	{
+		a[k].sum = ori[l];
+		a[k].squ = ori[l] * ori[l];
+		return;
+	}
+	int mid = (l + r) / 2;
+	build(k * 2, l, mid);
+	build(k * 2 + 1, mid + 1, r);
+	update(k);
+	return;
+}
+
+double query_ave(int k, int x, int y)
+{
+	if (x <= a[k].l && y >= a[k].r)	return	a[k].sum;
+	PushDown(k);
+	int mid = (a[k].l + a[k].r) / 2;
+	double ans = 0;
+	if (x <= mid)	ans += query_ave(k * 2, x, y);
+	if (y > mid)	ans += query_ave(k * 2 + 1, x, y);
+	return ans;
+}
+
+double query_squ(int k, int x, int y)
+{
+	if (x <= a[k].l && y >= a[k].r)	return	a[k].squ;
+	PushDown(k);
+	int mid = (a[k].l + a[k].r) / 2;
+	double ans = 0;
+	if (x <= mid)	ans += query_squ(k * 2, x, y);
+	if (y > mid)	ans += query_squ(k * 2 + 1, x, y);
+	return ans;
+}
+
+
+int main()
+{
+	cin >> n >> m;
+	for (int i = 1;i <= n;++i)
+		cin >> ori[i];
+	int op;
+	int l, r, x, y;
+	double k;
+	double ans;
+	double A;
+	double S;
+	build(1, 1, n);
+	while (m--)
+	{
+		cin >> op >> l >> r;
+		if (op == 1)
+		{
+			cin >> k;
+			ChangeSegment(1, l, r, k);
+		}
+		else if (op == 2)
+		{
+	
+			printf("%d\n", (int)((query_ave(1, l, r) / (r - l + 1)) * 100));
+			/*ans = (int)((query_ave(1, l, r) / (r - l + 1)) * 100);
+			cout << ans << endl;*/
+			//我！不！理！解！
+		}
+		else
+		{
+			double tmpsum = query_ave(1, l, r) / (r - l + 1);
+			printf("%d\n", (int)((query_squ(1, l, r) / (r - l + 1) - tmpsum * tmpsum) * 100));
+			/*A = query_ave(1, l, r) / (r - l + 1);
+			S = query_squ(1, l, r) / (r - l + 1);
+			ans = int(100 * (S - A * A));*/
+			/*cout << ans << endl;*/
+		}
+
+	}
+	return 0;
+}
