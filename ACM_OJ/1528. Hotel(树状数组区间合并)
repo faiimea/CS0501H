@@ -1,0 +1,120 @@
+#include <iostream>
+//#define _CRT_SECURE_NO_WARINGS//1 这条语句只能放在首行
+//#pragma warning(disable:4996)//2
+
+using namespace std;
+//我今天才知道max是在std里的
+const int maxn = 1e5 + 1000;
+struct node
+{
+	int sum;
+	int lmax;
+	int rmax;
+	int lazy;
+}tr[4*maxn+10];
+int n, m;
+
+void build(int p, int l, int r)
+{
+	tr[p].sum = tr[p].lmax = tr[p].rmax = r - l + 1;
+	tr[p].lazy = 0;
+	if (l == r)	return;
+	int mid = l + r >> 1;
+	build(p * 2, l, mid);
+	build(p*2+ 1, mid + 1, r);
+}
+
+void pushup(int p, int l, int r)
+{
+	int mid = l + r >> 1;
+	int p1 = 2 * p;
+	int p2 = 2 * p + 1;
+	if (tr[p1].sum == (mid - l + 1))
+		tr[p].lmax = tr[p1].sum + tr[p2].lmax;
+	else
+		tr[p].lmax = tr[p1].lmax;
+	if (tr[p2].sum == (r-mid))
+		tr[p].rmax = tr[p2].sum + tr[p1].rmax;
+	else
+		tr[p].rmax = tr[p2].rmax;
+	tr[p].sum = max(tr[p1].rmax + tr[p2].lmax, max(tr[p1].sum,tr[p2].sum));
+}
+
+void pushdown(int p, int l, int r)
+{
+	int mid = l + r >> 1;
+	int p1 = p * 2;
+	int p2 = p * 2 + 1;
+	if (tr[p].lazy == 1)
+	{
+		tr[p1].sum = tr[p1].lmax = tr[p1].rmax = tr[p2].sum = tr[p2].lmax = tr[p2].rmax = 0;
+		tr[p1].lazy = tr[p2].lazy = 1;
+	}
+	if (tr[p].lazy == 2)
+	{
+		tr[p1].sum = tr[p1].lmax = tr[p1].rmax = mid - l + 1;
+		tr[p2].sum = tr[p2].lmax = tr[p2].rmax = r - mid;
+		tr[p1].lazy = tr[p2].lazy = 2;
+	}
+	tr[p].lazy = 0;
+}
+
+void update(int p,int l,int r,int x,int y,int t)
+{
+	if (tr[p].lazy != 0)	pushdown(p, l, r);
+	//全覆盖区间的更新
+	if (x <= l && y >= r)
+	{
+		if (t == 1)	tr[p].sum = tr[p].lmax = tr[p].rmax = 0;
+		else tr[p].sum = tr[p].lmax = tr[p].rmax = r - l + 1;
+		tr[p].lazy = t;
+		return;
+	}
+	int mid = l + r >> 1;
+	if (x <= mid)	update(p << 1, l, mid, x, y, t);
+	if (y > mid)	update((p << 1) + 1, mid + 1, r, x, y, t);
+	pushup(p, l, r);
+}
+
+int query(int p, int l, int r, int x)
+{
+	if (tr[p].lazy != 0)	pushdown(p, l, r);
+	if (l == r)	return 1;
+	int mid = r + l >> 1;
+	int p1 = 2 * p;
+	int p2 = 2 * p + 1;
+	if (tr[p1].sum >= x)	return query(p1, l, mid, x);
+	if (tr[p1].rmax + tr[p2].lmax >= x)	return mid - tr[p1].rmax + 1;//succ
+	else return query(p2, mid + 1, r, x);
+}
+
+int main()
+{
+	scanf("%d%d", &n, &m);
+	build(1,1,n);
+	int mod, x, y;
+	int now;
+	for (int i = 0;i < m;++i)
+	{
+		scanf("%d", &mod);
+		if (mod == 1)
+		{
+			scanf("%d", &x);
+			if (tr[1].sum >= x) {
+				now = query(1, 1, n, x);
+				printf("%d\n", now);
+				update(1, 1, n, now, x + now - 1, mod);
+			}
+			else
+			{
+				printf("0\n");
+			}
+		}
+		else
+		{
+			scanf("%d%d", &x, &y);
+			update(1, 1, n, x, x + y - 1, mod);
+		}
+	}
+	return 0;
+}
