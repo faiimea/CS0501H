@@ -1,0 +1,103 @@
+#include <iostream>
+using namespace std;
+const int maxn = 1e5 + 10;
+const int foo = 1 << 30;
+struct node
+{
+	int l;
+	int r;
+	int m;
+	int lazy;
+}tr[maxn << 2];
+int ori[maxn];
+int res[maxn];
+int n;
+void update(int k)
+{
+	tr[k].m = min(tr[2 * k].m, tr[2 * k + 1].m);
+}
+
+void build(int k, int l, int r)
+{
+	tr[k].l = l;
+	tr[k].r = r;
+	if (l == r)
+	{
+		tr[k].m = ori[l];return;
+	}
+	int mid = l + r >> 1;
+	build(k * 2, l, mid);
+	build(k * 2 + 1, mid + 1, r);
+	update(k);
+}
+
+void pushdown(int k)
+{
+	if (tr[k].lazy)
+	{
+		tr[k * 2].m-= tr[k].lazy;
+		tr[k * 2 + 1].m -= tr[k].lazy;
+		tr[k * 2].lazy+=tr[k].lazy;
+		tr[k * 2 + 1].lazy += tr[k].lazy;
+		tr[k].lazy = 0;
+	}
+}
+
+void change(int k, int l, int r)
+{
+	if (l > r)	return;
+	if (tr[k].l >= l && tr[k].r <= r)
+	{
+		tr[k].m--;
+		tr[k].lazy += 1;
+		return;
+	}
+	pushdown(k);
+	int mid = tr[k].l + tr[k].r >> 1;
+	if (l <= mid)	change(k * 2, l, r);
+	if (r > mid)	change(2 * k + 1, l, r);
+	update(k);
+}
+
+void change_sin(int k, int l, int r)
+{
+	if (tr[k].l >= l && tr[k].r <= r)
+	{
+		tr[k].m = foo;return;
+	}
+	int mid = tr[k].l + tr[k].r >> 1;
+	if (l <= mid)	change_sin(k * 2, l, r);
+	if (r > mid)	change_sin(2 * k + 1, l, r);
+	update(k);
+}
+
+int query(int k)
+{
+	int loc;
+	if (tr[k].l == tr[k].r)
+	{
+		return tr[k].l;
+	};
+	pushdown(k);
+	if (tr[k * 2 + 1].m == 0)	loc = query(2 * k + 1);
+	else loc = query(2 * k);
+	return loc;
+}
+
+int main()
+{
+	cin >> n;
+	for (int i = 1;i <= n;++i)	cin >> ori[i];
+	build(1, 1, n);
+	int a;int b;
+	int tmp;
+	for (int i = 1;i <= n;++i)
+	{
+		a = query(1);
+		change_sin(1, a, a);
+		change(1, a + 1, n);
+		res[a] = i;
+	}
+	for (int i = 1;i <= n;++i)
+		cout << res[i] << " ";
+}
