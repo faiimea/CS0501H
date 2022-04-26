@@ -1,0 +1,48 @@
+#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable:4996)
+#include <iostream>
+#include <cstring>
+using namespace std;
+const int maxn = 1e6 + 10;
+const int b = 233;
+const int mod = 1 << 31;
+typedef unsigned long long ull;
+char s[maxn];
+ull m[maxn];
+ull h[maxn];
+int len;
+
+bool jud(ull res,int t)
+{
+	for (int i = 0;i < len;i += t)
+	{
+		if (h[i + t] - h[i] * m[t] != res)	return false;
+	}
+	return true;
+}
+
+int main()
+{
+	m[0] = 1;
+	for (int i = 1;i < maxn;++i)
+		m[i] = m[i - 1] * b;
+	while (scanf("%s", s + 1))
+	{
+		if (s[1] == '.')	return 0;
+		len = strlen(s + 1);
+		for (int i = 1;i <= len;++i)
+			h[i] = h[i - 1] * b + (s[i] - 'A' + 1);
+		for (int i = 1;i <= len;++i)
+		{
+			if (len % i == 0)//2 times better?
+			{
+				if (jud(h[i], i))
+				{
+					printf("%d\n", len/i);
+					break;
+				}
+			}
+		}
+	}
+	return 0;
+}
