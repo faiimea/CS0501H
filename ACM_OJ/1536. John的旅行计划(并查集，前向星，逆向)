@@ -1,0 +1,91 @@
+#include <iostream>
+using namespace std;
+const int maxn = 2e5+10;
+
+struct edge
+{
+	int next;
+	int fro;
+	int to;
+}e[maxn<<1];
+int head[maxn];
+int f[maxn];
+int t[maxn];
+bool ans[maxn];
+bool op[maxn] = {false};
+int cnt;
+int tot;
+int N, M;
+
+void add(int u, int v)
+{
+	cnt++;
+	e[cnt].fro = u;
+	e[cnt].next = head[u];
+	e[cnt].to = v;
+	head[u] = cnt;
+}
+
+int find(int x)
+{
+	if (f[x] == x)	return x;
+	return f[x] = find(f[x]);
+}
+
+bool query(int x, int y)
+{
+	int fx = find(x);
+	int fy = find(y);
+	return (fx == fy);
+}
+
+void uni(int x, int y)
+{
+	int fx = find(x);
+	int fy = find(y);
+	if (fx == fy)	return;
+	f[fx] = fy;
+	return;
+}
+
+int main()
+{
+	int u, v;
+	for (int i = 0;i < maxn;++i)	f[i] = i;
+	cin >> N >> M;
+	for (int i = 0;i < M;++i)
+	{
+		scanf("%d%d", &u, &v);
+		add(u, v);
+		add(v, u);
+	}
+	for (int i = 1;i <= N;++i)	scanf("%d", &t[i]);
+	op[t[N]] = 1;
+	ans[N] = 1;
+	for (int i = N - 1;i >= 1;--i)
+	{
+		op[t[i]] = 1;
+		for (int j = head[t[i]];j;j = e[j].next)
+		{
+			if (op[e[j].to] == 1)
+			{
+				if (!query(t[i], e[j].to))
+				{
+					uni(t[i], e[j].to);
+					++tot;
+				}
+			}
+		}
+		if (tot == N - i)
+		{
+			ans[i] = true;
+		}
+		else ans[i] = false;
+	}
+	for (int i = 1;i <= N;++i)
+	{
+		if (ans[i])	printf("YES\n");
+		else printf("NO\n");
+	}
+	return 0;
+}
