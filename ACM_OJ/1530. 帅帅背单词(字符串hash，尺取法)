@@ -1,0 +1,87 @@
+#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable:4996)
+#include <iostream>
+#include <cstring>
+using namespace std;
+const int b = 233;
+const int M = 10000019;
+const int mod = 1 << 31;
+const int maxn = 1e3 + 10;
+const int maxm = 1e5 + 10;
+typedef long long ll;
+ll mm[12];
+char str[12];
+int nee[M];
+int ori[maxm];
+bool fla[M];
+int vis[M];
+int len;
+int n;
+int m;
+
+int get_hash(char s[])
+{
+	int res = 0;
+	len = strlen(s);
+	for (int i = 0;i < len;++i)
+	{
+		res = ((ll)res * b + s[i]) % M;
+	}
+	return res;
+}
+
+int main()
+{
+	cin >> n;
+	while (n--)
+	{
+		scanf("%s", str);
+		nee[get_hash(str)]++;
+	}
+	cin >> m;
+	int tot=0;
+	int has;
+	for (int i = 1;i <= m;++i)
+	{
+		scanf("%s", str);
+		has = get_hash(str);
+		ori[i] = has;
+		if (nee[has] && !vis[has])
+		{
+			tot++;
+			vis[has]++;
+		}
+	}
+	if (tot == 0)
+	{
+		cout << "0"<<endl;
+		cout << "0";
+		return 0;
+	}
+	memset(vis, 0, sizeof vis);
+	int l = 1, r = 1, cnt = tot;
+	int p=1<<30;
+	while (1)
+	{
+		if (!cnt) {
+			while (!nee[ori[l]]) l++;
+			if (l == m + 1) break;
+			p = min(p, r - l);
+			if (vis[ori[l]] == 1) cnt++;
+			if (vis[ori[l]] >= 1) vis[ori[l]]--, l++;
+		}
+		else {
+			if (r == m + 1) break;
+			if (nee[ori[r]]) {
+				if (!vis[ori[r]]) cnt--;
+				vis[ori[r]]++;
+			}
+			r++;
+
+		}
+	}
+		cout << tot << endl;
+		cout << p;
+		return 0;
+	
+}	
