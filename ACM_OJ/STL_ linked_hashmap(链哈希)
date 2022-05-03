@@ -1,0 +1,466 @@
+#ifndef SJTU_LINKED_HASHMAP_HPP_STD
+#define SJTU_LINKED_HASHMAP_HPP_STD
+
+#include <cstddef>
+#include <functional>
+#include "utility.hpp"
+#include "algorithm.hpp"
+#include "exceptions.hpp"
+#include "list.hpp"
+using namespace std;
+namespace sjtu {
+    /**
+     *  Maintains key-value pairs just like MAP
+     *  Dynamically sized hash table who handles collision with linked lists
+     *  Iterators arrange in order of insertion (maintained by base class LIST)
+     */
+
+    template <
+        class Key,
+        class Value,
+        class Hash = std::hash<Key>,
+        class Equal = std::equal_to<Key>
+    >
+        class linked_hashmap : public list<pair<const Key, Value> > {
+        public:
+            using value_type = pair<const Key, Value>;
+            using list<value_type>::head;
+            using list<value_type>::tail;
+            using list<value_type>::nil;
+        private:
+            Equal key_equal;
+            Hash key_hash;
+            class Node : public list<value_type>::node {
+            public:
+                /**
+                 * add data members in addition to class node in LIST
+                 */
+                 //nxt,prv作为双链表的元素
+                 //lef,rig作为单链表的元素
+                Node* lef = nullptr;
+                Node* rig = nullptr;
+                Node() :rig(nullptr), lef(nullptr) {}
+                Node(const value_type& value) :rig(nullptr), lef(nullptr)
+                {
+                    this->val = new value_type(value);
+                }
+
+            };
+            /**
+             * singly-linked list used for hash collision
+             */
+            class BucketList {
+            public:
+                /**
+                 * data members, constructors and destructor
+                 */
+                Equal key_equal;
+                Node* head;
+                Node* tail;
+                int size;
+                BucketList()
+                {
+                    size = 0;
+                    head = new Node;
+                    tail = new Node;
+                    head->rig = tail;
+                    tail->lef = head;
+                }
+                ~BucketList()
+                {
+                    Bucket_Clear();
+                    delete head;
+                    delete tail;
+                    head = nullptr;
+                    tail = nullptr;
+                }
+                void Bucket_Clear()
+                {
+                    Node* now = head->rig;
+                    while (now != tail)
+                    {
+                        Node* tmp = now->rig;
+                        delete now;
+                        now = tmp;
+                    }
+                    size = 0;
+                    return;
+                }
+                /**
+                *  TODO find corresponding Node with key o
+                */
+                Node* find(const Key& o)
+                {
+                    Node* pos = head->rig;
+                    while (pos != tail)
+                    {
+                        if (key_equal(pos->val->first, o))    return pos;
+                        pos = pos->rig;
+                    }
+                    return tail;
+                }
+                /**
+                 * TODO insert key-value pair(k, v) into this BucketList
+                 * return this new Node
+                 */
+                Node* insert(const Key& k, const Value& v)
+                {
+                    value_type value(k, v);
+                    Node* pos = find(k);
+                    if (pos != tail)   return pos;
+                    pos = nullptr;
+                    pos = new Node(value);
+                    pos->rig = head->rig;
+                    pos->lef = head;
+                    head->rig = pos;
+                    pos->rig->lef = pos;
+                    ++size;
+                    return pos;
+                }
+                Node* insert(const value_type& kv)
+                {
+                    Node* pos = find(kv.first);
+                    if (pos != tail)   return pos;
+                    pos = nullptr;
+                    pos = new Node(kv);
+                    pos->rig = head->rig;
+                    pos->lef = head;
+                    head->rig = pos;
+                    pos->rig->lef = pos;
+                    ++size;
+                    return pos;
+                }
+                /**
+                 * TODO remove the Node with key k from this BucketList (no need to delete)
+                 * return the removed Node
+                 */
+                Node* erase(const Key& k)
+                {
+                    Node* pos = find(k);
+                    pos->lef->rig = pos->rig;
+                    pos->rig->lef = pos->lef;
+                    --size;
+                    return pos;
+                }
+            };
+
+            /**
+             * add data members as needed and necessary private function such as resize()
+             */
+        private:
+            int capacity = 200;
+            const double loadFactor = 0.75;
+            int cnt = 0;
+            Node* Head;
+            Node* Tail;
+            Node* Nil;
+            /*node* ori_head;*/
+            /*list<pair<const Key, Value> >::node* ori_head;*/
+            typename list<value_type>::node* ori_head;
+            typename list<value_type>::node* ori_nil;
+            BucketList* arr;
+            int GetHash(const Key& key) const
+            {
+                return key_hash(key) % capacity;
+            }
+
+            bool CheckCap()
+            {
+                if (cnt > capacity * loadFactor)
+                    capacity <<=1;
+               /* else if (cnt < capacity * 0.3)
+                    capacity >>=1;*/
+                else return false;
+                BucketList* arr_new = new BucketList[capacity];
+                for (Node* p = dynamic_cast<Node*>(Head->nxt);p != (Nil);p = dynamic_cast<Node*>(p->nxt))
+                {
+                    int pos = GetHash(p->val->first);
+                    p->lef->rig = p->rig;
+                    p->rig->lef = p->lef;
+                    p->rig = arr_new[pos].head->rig;
+                    p->lef = arr_new[pos].head;
+                    arr_new[pos].head->rig->lef = p;
+                    arr_new[pos].head->rig = p;
+                    ++arr_new[pos].size;
+                }
+                delete[] arr;
+                arr = arr_new;
+                return true;
+            }
+
+            bool CheckCap2()
+            {
+                if (cnt > capacity * loadFactor)
+                    capacity <<= 1;
+                 else if (cnt < capacity * 0.3)
+                     capacity >>=1;
+                else return false;
+                BucketList* arr_new = new BucketList[capacity];
+                for (Node* p = dynamic_cast<Node*>(Head->nxt);p != (Nil);p = dynamic_cast<Node*>(p->nxt))
+                {
+                    int pos = GetHash(p->val->first);
+                    p->lef->rig = p->rig;
+                    p->rig->lef = p->lef;
+                    p->rig = arr_new[pos].head->rig;
+                    p->lef = arr_new[pos].head;
+                    arr_new[pos].head->rig->lef = p;
+                    arr_new[pos].head->rig = p;
+                    ++arr_new[pos].size;
+                }
+                delete[] arr;
+                arr = arr_new;
+                return true;
+            }
+        public:
+            /**
+             * iterator is the same as LIST
+             */
+            using iterator = typename list<value_type>::iterator;
+            using const_iterator = typename list<value_type>::const_iterator;
+            /**
+            * TODO two constructors
+            */
+            void uni()
+            {
+                head = Head;
+                tail = Tail;
+                nil = Nil;
+            }
+            linked_hashmap()
+            {
+                arr = new BucketList[capacity];
+                Head = Tail = new Node;
+                Tail->nxt = Nil = new Node, Nil->prv = Tail;
+                this->ori_head = head;
+                this->ori_nil = nil;
+                uni();
+            }
+            linked_hashmap(const linked_hashmap& other)
+            {
+                capacity = other.capacity;
+                cnt = other.cnt;
+                arr = new BucketList[capacity];
+                Head = Tail = new Node;
+                Tail->nxt = Nil = new Node, Nil->prv = Tail;
+                for (Node* p = dynamic_cast<Node*>(other.Head->nxt);p != other.Nil;p = dynamic_cast<Node*>(p->nxt), Tail = dynamic_cast<Node*>(Tail->nxt))
+                {
+                    int pos = GetHash(p->val->first);
+                    Node* now = arr[pos].insert(*p->val);
+                    Tail->nxt = now;
+                    Tail->nxt->prv = Tail;
+                }
+                Tail->nxt = Nil, Nil->prv = Tail;
+                this->ori_head = head;
+                this->ori_nil = nil;
+                CheckCap2();
+                uni();
+            }
+            /**
+             * TODO assignment operator
+             */
+            linked_hashmap& operator=(const linked_hashmap& other)
+            {
+                if (this == &other)    return *this;
+                clear();
+                cnt = other.cnt;
+                if (capacity < other.capacity)
+                {
+                    delete[]arr;
+                    capacity = other.capacity;
+                    arr = new BucketList[capacity];
+                }
+                for (Node* p = dynamic_cast<Node*>(other.Head->nxt);p != other.Nil;p = dynamic_cast<Node*>(p->nxt), Tail = dynamic_cast<Node*>(Tail->nxt))
+                {
+                    int pos = GetHash(p->val->first);
+                    Node* now = arr[pos].insert(*p->val);
+                    Tail->nxt = now;
+                    Tail->nxt->prv = Tail;
+                }
+                Tail->nxt = Nil, Nil->prv = Tail;
+                CheckCap2();
+                uni();
+                return *this;
+            }
+
+            /**
+             * TODO Destructors
+             */
+            ~linked_hashmap()
+            {
+                clear();
+                delete[] arr;
+                delete Head;
+                delete Nil;
+                head = this->ori_head;
+                nil = this->ori_nil;
+                tail = nil->prv;
+            }
+            /**
+             * TODO access specified element with bounds checking
+             * Returns a reference to the mapped value of the element with key equivalent to key.
+             * If no such element exists, an exception of type `index_out_of_bound'
+             */
+            Value& at(const Key& key)
+            {
+                int pos = GetHash(key);
+                Node* now = arr[pos].find(key);
+                if (now == arr[pos].tail)  throw index_out_of_bound();
+                return now->val->second;
+            }
+            const Value& at(const Key& key) const
+            {
+                int pos = GetHash(key);
+                Node* now = arr[pos].find(key);
+                if (now == arr[pos].tail)  throw index_out_of_bound();
+                return now->val->second;
+            }
+            /**
+             * TODO access specified element
+             * Returns a reference to the value that is mapped to a key equivalent to key,
+             *   performing an insertion if such key does not already exist.
+             */
+            Value& operator[](const Key& key)
+            {
+                int pos = GetHash(key);
+                Node* tmp = arr[pos].find(key);
+                if (tmp != arr[pos].tail)
+                    return tmp->val->second;
+                if (CheckCap()) pos = GetHash(key);
+                tmp = arr[pos].insert(value_type(key, Value()));
+                tmp->nxt = Nil;
+                tmp->prv = Nil->prv;
+                Nil->prv->nxt = tmp;
+                Nil->prv = tmp;
+                Tail = tmp;
+                ++cnt;
+                uni();
+                return tmp->val->second;
+            }
+            /**
+             * behave like at() throw index_out_of_bound if such key does not exist.
+             */
+            const Value& operator[](const Key& key) const
+            {
+                return at(key);
+            }
+            /**
+             * TODO override clear() in LIST
+             */
+            void clear() override
+            {
+                for (; Tail != Head;) {
+                    Node* t = Tail;
+                    int pos = GetHash(t->val->first);
+                    if (arr[pos].size) 
+                    { 
+                        arr[pos].erase(t->val->first); 
+                    }
+                    Tail = dynamic_cast<Node*>(Tail->prv);
+                    --cnt;
+                    /*delete t->val;*/
+                    delete t;
+                    t = nullptr;
+                }
+                Tail->nxt = Nil, Nil->prv = Tail;
+                cnt = 0;
+                uni();
+            }
+            /**
+             * TODO insert an element.
+             * return a pair, the first of the pair is
+             *   the iterator to the new element (or the element that prevented the insertion),
+             *   the second one is true if insert successfully, or false.
+             */
+            pair<iterator, bool> insert(const value_type& value)
+            {
+                int pos = GetHash(value.first);
+                Node* tmp = arr[pos].find(value.first);
+                if (tmp != arr[pos].tail)
+                {
+                    return pair<iterator, bool>(iterator(tmp, this), false);
+                }
+                if (CheckCap()) pos = GetHash(value.first);
+                tmp = arr[pos].insert(value);
+                tmp->nxt = Nil;
+                tmp->prv = Nil->prv;
+                Nil->prv->nxt = tmp;
+                Nil->prv = tmp;
+                Tail = tmp;
+                ++cnt;
+                uni();
+                return pair<iterator, bool>(iterator(tmp, this), true);
+            }
+            /**
+             * TODO erase the element at pos.
+             * throw if pos pointed to a bad element (pos == this->end() || pos points an element out of this)
+             * return anything, it doesn't matter
+             */
+            iterator erase(iterator pos) override
+            {
+                if (pos.invalid(this))   throw invalid_iterator();
+                value_type* V = &(*pos);
+                CheckCap();
+                int p = GetHash(V->first);
+                Node* now = arr[p].find(V->first);
+                if (now == Tail)   Tail = dynamic_cast<Node*>(now->prv);
+                if (now->nxt)    now->nxt->prv = now->prv;
+                if (now->prv)    now->prv->nxt = now->nxt;
+                arr[p].erase(V->first);
+                --cnt;
+                delete now;
+                now = nullptr;
+                uni();
+                return ttest();
+            }
+            iterator ttest()
+            {
+                return iterator(Head, this);
+            }
+            /**
+             * TODO Returns the number of elements with key
+             *   that compares equivalent to the specified argument,
+             *   which is either 1 or 0
+             *     since this container does not allow duplicates.
+             */
+            size_t count(const Key& key) const
+            {
+                int pos = GetHash(key);
+                Node* now = arr[pos].find(key);
+                if (now == arr[pos].tail)  return 0;
+                else return 1;
+            }
+            /**
+             * TODO Finds an element with key equivalent to key.
+             * return iterator to an element with key equivalent to key.
+             *   If no such element is found, past-the-end (see end()) iterator is returned.
+             */
+            iterator find(const Key& key)
+            {
+                int pos = GetHash(key);
+                Node* now = arr[pos].find(key);
+                if (now == arr[pos].tail)  return list<pair<const Key, Value> >::end();
+                else return iterator(now, this);
+            }
+            const_iterator find(const Key& key) const
+            {
+                int pos = GetHash(key);
+                Node* now = arr[pos].find(key);
+                if (now == arr[pos].tail)
+                {
+                    return list<pair<const Key, Value> >::cend();
+                }
+                else return const_iterator(now, this);
+            }
+            size_t size() const {
+                return cnt;
+            }
+            bool empty() const
+            {
+                if (cnt == 0)  return true;
+                else return false;
+            }
+    };
+
+}
+
+#endif
