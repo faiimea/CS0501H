@@ -1,0 +1,52 @@
+#include <iostream>
+using namespace std;
+const int maxn = 1e4 + 10;
+int n;
+int m;
+int f[maxn << 1];
+
+int find(int x)
+{
+	if (f[x] == x)	return x;
+	return f[x] = find(f[x]);
+}
+
+void uni(int x, int y)
+{
+	int fx = find(x);
+	int fy = find(y);
+	if (fx == fy)	return;
+	else
+	{
+		f[fx] = fy;
+	}
+}
+
+int main()
+{
+	cin >> n;
+	cin >> m;
+	char mod;
+	int p, q;
+	for (int i = 1;i <= 2*n;++i)
+		f[i] = i;
+	for (int i = 0;i < m;++i)
+	{
+		cin >> mod>>p>>q;
+		if (mod == 'E')
+		{
+			uni(n + q, p);
+			uni(n + p, q);
+		}
+		else
+		{
+			uni(p, q);
+		}
+	}
+	int tot=0;
+	for (int i = 1;i <= n;++i)
+	{
+		if (f[i] == i)	tot++;
+	}
+	cout << tot;
+}
