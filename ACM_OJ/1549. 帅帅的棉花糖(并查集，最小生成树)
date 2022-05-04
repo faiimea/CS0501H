@@ -1,0 +1,60 @@
+#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <algorithm>
+#include <cmath>
+using namespace std;
+int n,k,m;
+int fa[1000050];
+struct node {
+	int x;
+	int y;
+	int l;
+} a[1000005];
+int cmp( const void *a , const void *b ) {
+	struct node *c = (node *)a;
+	struct node *d = (node *)b;
+	return c->l - d->l;
+}
+int find(int x)
+{
+	if(x!=fa[x])
+	fa[x]=find(fa[x]);
+	return fa[x];
+}
+void work(int x,int y)
+{
+	x=find(x);
+	y=find(y);
+	if(x==y)
+	return;
+	fa[x]=y;
+}
+int main() {
+	cin>>n>>m>>k;
+	for(int i=0; i<m; i++) {
+		scanf("%d%d%d",&a[i].x,&a[i].y,&a[i].l);
+	}
+	qsort(a,m,sizeof(a[0]),cmp);
+	for(int i=1;i<=n;i++)
+	fa[i]=i;
+	int num=n-k;
+	int ans=0;
+	for(int i=0;i<m;i++)
+	{
+		if(num==0)
+		break;
+		int aaa=find(a[i].x);
+		int wzx=find(a[i].y);
+		if(aaa!=wzx)
+		{
+			work(a[i].x,a[i].y);
+			ans+=a[i].l;
+			num--;
+		}
+	}
+	if(num)
+	cout<<"No Answer"<<endl;
+	else
+	cout<<ans<<endl;
+}
