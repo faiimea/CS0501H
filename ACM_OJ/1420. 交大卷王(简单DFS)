@@ -1,0 +1,49 @@
+#include <iostream>
+using namespace std;
+const int maxn = 1e5+10;
+int Head[maxn];
+int ori[maxn];
+int val[maxn];
+int tot;
+struct e
+{
+	int to, next;
+	e(int t = 0, int n = 0) :to(t), next(n) {}
+}Edge[maxn<<1];
+
+void insert(int x,int y)
+{
+	Edge[++tot] = e(y, Head[x]);
+	Head[x] = tot;
+}
+
+void DFS(int cur, int fat)
+{
+	/*val[cur] = ori[cur];*/
+	for (int i = Head[cur];i;i = Edge[i].next)
+	{
+		int dur = Edge[i].to;
+		if (dur == fat)	continue;
+		DFS(dur, cur);
+		val[cur] += val[dur];
+	}
+}
+
+int main()
+{
+	int n;
+	cin >> n;
+	for (int i = 0;i < n;++i)
+		cin >> val[i];
+	for (int i = 1;i < n;++i)
+	{
+		int u, v;
+		cin >> u >> v;
+		insert(u, v);
+		insert(v, u);
+	}
+	DFS(0, -1);
+	for (int i = 0;i < n;++i)
+		cout << val[i]<<endl;
+	return 0;
+}
