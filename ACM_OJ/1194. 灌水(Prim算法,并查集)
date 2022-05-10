@@ -1,0 +1,75 @@
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const int maxn = 305;
+const int maxm = 1e5 + 10;
+
+struct e
+{
+	int u, v, val;
+	e(int uu=0,int vv=0,int va=0):u(uu),v(vv),val(va){}
+
+}Edge[maxm];
+
+int f[maxn];
+int n;
+int tot = 0;
+
+bool cmp(e e1, e e2)
+{
+	if (e1.val < e2.val)	return true;
+	else return false;
+}
+
+int find(int x)
+{
+	if (x == f[x])	return x;
+	return f[x] = find(f[x]);
+}
+
+void uni(int x, int y)
+{
+	int fx = find(x);
+	int fy = find(y);
+	if (fx == fy)	return;
+	else
+		f[fx] = fy;
+}
+
+int main()
+{
+	cin >> n;
+	for (int i = 0;i <= n;++i)
+		f[i] = i;
+	int tmp;
+	for (int i = 1;i <= n;++i)
+	{
+		cin >> tmp;
+		Edge[tot++] = e(0, i, tmp);
+	}
+	for (int i = 1;i <= n;++i)
+	{
+		for (int j = 1;j <= n;++j)
+		{
+			cin >> tmp;
+			if(i<j)	Edge[tot++] = e(i, j, tmp);
+		}
+	}
+	sort(Edge, Edge + tot, cmp);
+	int num = 0;
+	int res = 0;
+	for (int i = 0;i < tot;++i)
+	{
+		int x = find(Edge[i].u);
+		int y = find(Edge[i].v);
+		int len = Edge[i].val;
+		if (x == y)	continue;
+		uni(x, y);
+		num++;res += len;
+		if (num == n)	break;
+	}
+	cout << res;
+	return 0;
+	
+
+}
