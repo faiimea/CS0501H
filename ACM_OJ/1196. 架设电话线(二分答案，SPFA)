@@ -1,0 +1,92 @@
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const int maxn = 1e3 + 10;
+const int maxp = 1e4 + 10;
+struct edge
+{
+	int to, next, val;
+}e[maxp<<1];
+
+int N, P, K;
+int head[maxn];
+int dis[maxn];
+int q[maxn];
+bool vis[maxn];
+int tot;
+int maxl = -1;
+
+void add(int u,int v,int w)
+{
+	e[++tot].to = v;
+	e[tot].next = head[u];
+	e[tot].val = w;
+	head[u] = tot;
+}
+
+bool check(int ans)//SPFA
+{
+	for (int i = 0;i < maxn;++i)
+		dis[i] = 1<<30;
+	dis[1] = 0;
+	int t = 0 ;int h = 1;
+	q[t] = 1;
+	vis[1] = true;
+	int tmp;
+	while (t != h)
+	{
+		tmp = q[t];++t;
+		if (t == 1001)t = 0;//控制队列长度恒为1000
+		int now = head[tmp];
+		int d;
+		while (now)//DFS
+		{
+			if (e[now].val > ans)	d = dis[tmp] + 1;
+			else d = dis[tmp];
+			if (d < dis[e[now].to])//松弛
+			{
+				dis[e[now].to] = d;
+				if (vis[e[now].to] == false)
+				{
+					vis[e[now].to] = true;
+					q[h++] = e[now].to;//这里为什么是h++,h是尾部，上来的时候没有值，先h再+
+					if (h == 1001)	h = 0;
+				}
+			}
+			now = e[now].next;
+		}
+		vis[tmp] = false;
+	}
+	if (dis[N] <= K)	return true;
+	else return false;
+
+}
+
+int main()
+{
+	cin >> N >> P >> K;
+	int a, b, c;
+	for (int i = 0;i < P;++i)
+	{
+		cin >> a >> b >> c;
+		maxl = max(maxl, c);
+		add(a, b, c);
+		add(b, a, c);
+	}
+	int l, r;
+	int res = -1;
+	l = 0;r = maxl;
+	while (l <= r)
+	{
+		int mid = (l + r) / 2;
+		if (check(mid))
+		{
+			r = mid - 1;
+			res = mid;
+		}
+		else l = mid + 1;
+	}
+	cout << res;
+	return 0;
+
+}
