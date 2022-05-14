@@ -1,0 +1,130 @@
+#include <iostream>
+#include <cstring>
+using namespace std;
+const int maxn = 500005;
+const int maxm = 500005;
+struct edge
+{
+	int next;
+	int to;
+	int val;
+}E[maxn];
+int head[maxn], dfn[maxn], low[maxn], stack[maxn], vis[maxn], typ[maxn], mon[maxn], sum[maxn], dis[maxn], que[maxn], x[maxn], y[maxn], used[maxn];
+int id, tim, tot, ans, S, N, M, P;
+int top = 0;
+
+
+void add_t(int a, int b)//用于tarjan缩点的无权图
+{
+	E[++id].to = b;
+	E[id].next = head[a];
+	head[a] = id;
+}
+
+void add_s(int u, int v, int len)//用于SPFA的有权图，化点权为边权
+{
+	E[++id].to = v;
+	E[id].next = head[u];
+	E[id].val = len;
+	head[u] = id;
+}
+
+void tarjan(int a)//tarjan缩点
+{
+	dfn[a] = low[a] = ++tim;
+	vis[a] = 1;
+	stack[++top] = a;
+	int goa;
+	for (int i = head[a];i;i = E[i].next)//DFS
+	{
+		goa = E[i].to;
+		if (!dfn[goa])
+		{
+			tarjan(goa);
+			low[a] = min(low[a], low[goa]);
+		}
+		else
+		{
+			if (vis[goa])	low[a] = min(low[a], dfn[goa]);
+		}
+	}
+		if (dfn[a] == low[a])
+		{
+			tot++;
+			while (stack[top + 1] != a)//分离出一个强连通块
+			{
+				typ[stack[top]] = tot;
+				sum[tot] += mon[stack[top]];
+				vis[stack[top]] = 0;
+				top--;
+			}
+		}
+	
+
+}
+
+void SPFA()
+{
+	for (int i = 1;i <= tot;i++)
+		dis[i] = 0x7fffffff;
+	int st = typ[S];
+	dis[st] = -sum[st];
+	que[0] = st;
+	int p = 0;int q = 0;
+	while (p <= q)
+	{
+		int tmp = que[p % N];
+		used[tmp] = 0;
+		int t = head[tmp];
+		while (t)
+		{
+			if (dis[tmp] + E[t].val < dis[E[t].to])
+			{
+				dis[E[t].to] = dis[tmp] + E[t].val;
+				if (!used[E[t].to])
+				{
+					que[++q % N] = E[t].to;
+					used[E[t].to] = 1;
+				}
+			}
+			t = E[t].next;
+		}
+		p++;
+	}
+
+}
+
+int main()
+{
+	cin >> N >> M;
+	for (int i = 1;i <= M;++i)
+	{
+		cin >> x[i] >> y[i];
+		add_t(x[i], y[i]);
+	}
+	for (int i = 1;i <= N;++i)	cin >> mon[i];
+	for (int i = 1;i <= N;++i)
+	{
+		if (!dfn[i])	tarjan(i);//全tarjan保险
+	}
+	memset(E, 0, sizeof(E));
+	memset(head, 0, sizeof(head));
+	id = 0;
+	for (int i = 1;i <= M;i++)
+	{
+		if (typ[x[i]] != typ[y[i]])
+			add_s(typ[x[i]], typ[y[i]], -(sum[typ[y[i]]]));
+		//有向图第一个点一定经过，用y值代替边值
+	}
+	cin >> S;
+	SPFA();
+	cin >> P;
+	int fin;
+	for (int i = 1;i <= P;++i)
+	{
+		cin >> fin;
+		if (-dis[typ[fin]] > ans)	ans = -dis[typ[fin]];
+	}
+	cout << ans;
+	return 0;
+}
