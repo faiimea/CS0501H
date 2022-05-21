@@ -1,0 +1,661 @@
+/**
+ * implement a container like std::map
+ */
+#ifndef SJTU_MAP_HPP
+#define SJTU_MAP_HPP
+
+ // only for std::less<T>
+#include <functional>
+#include <cstddef>
+#include "utility.hpp"
+#include "exceptions.hpp"
+
+namespace sjtu {
+
+    template<
+        class Key,
+        class T,
+        class Compare = std::less<Key>
+    >
+        class map
+    {
+    public:
+        /**
+         * the internal type of data.
+         * it should have a default constructor, a copy constructor.
+         * You can use sjtu::map as value_type by typedef.
+         */
+        typedef pair<const Key, T> value_type;
+    private:
+        struct AvlNode
+        {
+            value_type* data;
+            AvlNode* left;
+            AvlNode* right;
+            AvlNode* father;
+            int height=0;
+            AvlNode()
+            {
+                data = nullptr;
+                left = nullptr;
+                right = nullptr;
+                father = nullptr;
+                height = 0;
+            }
+            AvlNode(const value_type& dt, AvlNode* lt, AvlNode* rt, AvlNode* ft = nullptr, int h = 1)
+                :data(new value_type{ dt }), left(lt), right(rt), father(ft), height(h) {}
+            AvlNode(AvlNode* ori, AvlNode* ori_ft, AvlNode* lt = nullptr, AvlNode* rt = nullptr)
+                :data(new value_type{ *(ori->data) }), father(ori_ft), left(lt), right(rt) {}
+            AvlNode(AvlNode& obs)
+            {
+                if (obs.data)    data = new value_type{ *obs.data };
+                else    data = nullptr;//pair的构造方式
+                father = obs.father;
+                left = obs.left;
+                right = obs.right;
+                height = obs.height;
+            }
+            ~AvlNode()
+            {
+                if (data)    delete data;
+                data = nullptr;
+                left = nullptr;
+                right = nullptr;
+                father = nullptr;
+                height = 0;
+            }
+        };
+        AvlNode* root;
+        AvlNode* rear;
+        int tot = 0;
+        int height(AvlNode* tmp)
+        {
+            if (tmp == nullptr)  return 0;
+            return tmp->height;
+        }
+        void update(AvlNode* t)
+        {
+            t->height = std::max(height(t->left), height(t->right)) + 1;
+        }
+        void Copy(AvlNode*& now, AvlNode* ori, AvlNode* ft)
+        {
+            if (ori == nullptr)    return;
+            now = new AvlNode(ori, ft);
+            Copy(now->left, ori->left, now);
+            Copy(now->right, ori->right, now);
+        }
+        void Clear(AvlNode* now)
+        {
+            if (now == nullptr)    return;
+            Clear(now->left);
+            Clear(now->right);
+            delete now;
+        }
+        AvlNode* Find(const Key& x, AvlNode* roots) const
+        {
+            if (roots == nullptr)  return roots;
+            if (!Compare()(roots->data->first, x) && !Compare()(x, roots->data->first))  return roots; //success
+            if (Compare()(roots->data->first, x))    return Find(x, roots->right);
+            else return Find(x, roots->left);
+        }
+        AvlNode* FindMin(AvlNode* now) const
+        {
+            if (now == nullptr)    return now;
+            while (now->left)    now = now->left;
+            if (now) return now;
+            else return rear;
+        }
+        AvlNode* FindMax(AvlNode* now) const
+        {
+            if (now == nullptr)    return now;
+            while (now->right)    now = now->right;
+            if (now) return now;
+            else return rear;
+        }
+        AvlNode* FindPrv(AvlNode* now) const
+        {
+            if (now == rear)   return FindMax(root);
+            if (now->left)
+            {
+                now = now->left;
+                while (now->right)   now = now->right;
+                return now;
+            }
+            else
+            {
+                while (now->father)
+                {
+                    if (Compare()(now->father->data->first, now->data->first))   return now->father;
+                    else now = now->father;
+                }
+            }
+        }
+        AvlNode* FindNxt(AvlNode* now) const
+        {
+            if (now->right)
+            {
+                now = now->right;
+                while (now->left)   now = now->left;
+                return now;
+            }
+            else
+            {
+                AvlNode* ori = now;
+                while (now->father)
+                {
+                    if (Compare()(ori->data->first, now->father->data->first))   return now->father;
+                    else now = now->father;
+                }
+                return rear;//如果什么都没有找到，说明这里就是尾部。
+            }
+        }
+        void Alt(AvlNode* ori, AvlNode* tmp)
+        {
+            if (ori->father == nullptr)    root = tmp;
+            else if (ori->father->right == ori) ori->father->right = tmp;
+            else if (ori->father->left == ori)ori->father->left = tmp;;
+        }
+        void LL(AvlNode* t)
+        {
+
+            AvlNode* t1 = t->left;
+            t->left = t1->right;
+            if (t1->right)   t1->right->father = t;
+            t1->father = t->father;
+            Alt(t, t1);
+            t->father = t1;
+            t1->right = t;
+            update(t);
+            t1->height = std::max(height(t1->left), height(t)) + 1;
+
+        }
+        void RR(AvlNode* t)
+        {
+            AvlNode* t1 = t->right;
+            t->right = t1->left;
+            if (t1->left)   t1->left->father = t;
+            t1->father = t->father;
+            Alt(t, t1);
+            t->father = t1;
+            t1->left = t;
+            update(t);
+            t1->height = std::max(height(t1->right), height(t)) + 1;
+        }
+        void LR(AvlNode* t)
+        {
+            RR(t->left);
+            LL(t);
+        }
+        void RL(AvlNode* t)
+        {
+            LL(t->right);
+            RR(t);
+        }
+        void insert(const value_type& x, AvlNode*& t, AvlNode* ft)
+        {
+            if (t == nullptr)
+            {
+                t = new AvlNode(x, nullptr, nullptr, ft);
+                if (!ft) root = t;
+                else
+                {
+                    if (Compare()(x.first, ft->data->first))ft->left = t;
+                    else ft->right = t;
+                }
+            }
+            else if (Compare()(x.first, t->data->first))
+            {
+                insert(x, t->left, t);
+                if (height(t->left) - height(t->right) >= 2) //t失衡
+                {
+                    if (Compare()(x.first, t->left->data->first))   LL(t);
+                    else LR(t);
+                }
+            }
+            else if (!Compare()(x.first, t->data->first))
+            {
+                insert(x, t->right, t);
+                if (height(t->right) - height(t->left) >= 2) {
+                    if (Compare()(t->right->data->first, x.first))  RR(t);
+                    else RL(t);
+                }
+            }
+            update(t);
+        }
+        void remove(AvlNode* t)
+        {
+            if (t == nullptr)  return;
+            if (t->left == nullptr || t->right == nullptr)
+            {
+                AvlNode* tmp = (t->left == nullptr) ? t->right : t->left;
+                Alt(t, tmp);
+                if (t->left)    t->left->father = t->father;
+                if (t->right)    t->right->father = t->father;
+                adjust(t->father);
+                delete t;
+            }
+            else//先用nxt替换，再删除t1
+            {
+                AvlNode* tmp = FindNxt(t);
+                if (tmp == rear)//null
+                {
+                    root = nullptr;
+                    delete t;
+                    return;
+                }
+                AvlNode* t1 = new AvlNode(*tmp);
+                Alt(t, tmp);
+                if (tmp == t->right)//若替换node恰好为右儿子
+                {
+                    tmp->left = t->left;
+                    tmp->right = t1;
+                    if (t->left) t->left->father = tmp;
+                    t1->father = tmp;
+                    if (t1->right)t1->right->father = t1;
+                    tmp->father = t->father;
+                    tmp->height = t->height;
+                }
+                else //若替换node不是右儿子
+                {
+                    tmp->left = t->left;
+                    tmp->right = t->right;
+                    if (t->left) t->left->father = tmp;
+                    if (t->right) t->right->father = tmp;
+                    t1->father->left = t1;
+                    if (t1->right)t1->right->father = t1;
+                    tmp->father = t->father;
+                    tmp->height = t->height;
+                }
+                remove(t1);
+                delete t;
+            }
+        }
+        void adjust(AvlNode* t)//yyu上课的manner雀氏简单
+        {
+            if (t == nullptr)
+                return;
+            update(t);
+            if (height(t->right) - height(t->left) >= 2)
+            {
+                if (height(t->right->left) > height(t->right->right))   RL(t);
+                else RR(t);
+            }
+            else if (height(t->left) - height(t->right) >= 2)
+            {
+                if (height(t->left->left) < height(t->left->right))     LR(t);
+                else LL(t);
+            }
+            adjust(t->father);
+        }
+    public:
+        /**
+         * see BidirectionalIterator at CppReference for help.
+         *
+         * if there is anything wrong throw invalid_iterator.
+         *     like it = map.begin(); --it;
+         *       or it = map.end(); ++end();
+         */
+        class const_iterator;
+        class iterator
+        {
+        public:
+            AvlNode* now;
+            map* MAP;
+        public:
+            iterator()
+            {
+                // TODO
+                now = nullptr;
+                MAP = nullptr;
+            }
+            iterator(AvlNode* N, map* M)
+            {
+                now = N;
+                MAP = M;
+            }
+            iterator(const iterator& other)
+            {
+                // TODO
+                now = other.now;
+                MAP = other.MAP;
+            }
+            iterator operator++(int)
+            {
+                if (now == MAP->rear)  throw invalid_iterator();
+                iterator it = *this;
+                this->now = MAP->FindNxt(now);
+                return it;
+            }
+            iterator& operator++()
+            {
+                if (now == MAP->rear)  throw invalid_iterator();
+                this->now = MAP->FindNxt(now);
+                return *this;
+            }
+            iterator operator--(int)
+            {
+                iterator it = *this;
+                if (*this == MAP->begin())throw invalid_iterator();
+                //if (!now)throw invalid_iterator();
+                this->now = MAP->FindPrv(now);
+                return it;
+            }
+            iterator& operator--()
+            {
+                if (*this == MAP->begin())throw invalid_iterator();
+                //if (!now)throw invalid_iterator();
+                this->now = MAP->FindPrv(now);
+                return *this;
+
+            }
+            value_type& operator*() const
+            {
+                return *(now->data);
+            }
+            bool operator==(const iterator& rhs) const
+            {
+                if (now == rhs.now && MAP == rhs.MAP)  return true;
+                else return false;
+            }
+            bool operator==(const const_iterator& rhs) const
+            {
+                if (now == rhs.now && MAP == rhs.MAP)  return true;
+                else return false;
+            }
+            bool operator!=(const iterator& rhs) const
+            {
+                if (now != rhs.now || MAP != rhs.MAP)  return true;
+                else return false;
+            }
+            bool operator!=(const const_iterator& rhs) const
+            {
+                if (now != rhs.now || MAP != rhs.MAP)  return true;
+                else return false;
+            }
+            value_type* operator->() const noexcept
+            {
+                return now->data;
+            }
+        };
+        class const_iterator
+        {
+        public:
+            AvlNode* now;
+            const map* MAP;
+        public:
+            const_iterator()
+            {
+                now = nullptr;
+                MAP = nullptr;
+            }
+            const_iterator(AvlNode* N, const map* M)
+            {
+                now = N;
+                MAP = M;
+            }
+            const_iterator(const const_iterator& other)
+            {
+                now = other.now;
+                MAP = other.MAP;
+            }
+            const_iterator(const iterator& other)
+            {
+                now = other.now;
+                MAP = other.MAP;
+            }
+            const_iterator operator++(int)
+            {
+                if (now == MAP->rear)  throw invalid_iterator();
+                const_iterator it = *this;
+                this->now = MAP->FindNxt(now);
+                return it;
+            }
+            const_iterator& operator++()
+            {
+                if (now == MAP->rear)  throw invalid_iterator();
+                this->now = MAP->FindNxt(now);
+                return *this;
+            }
+            const_iterator operator--(int)
+            {
+                const_iterator it = *this;
+                if (*this == MAP->cbegin())throw invalid_iterator();
+                //if (!now)throw invalid_iterator();
+                this->now = MAP->FindPrv(now);
+                return it;
+            }
+            const_iterator& operator--()
+            {
+                if (*this == MAP->cbegin())throw invalid_iterator();
+                //if (!now)throw invalid_iterator();
+                this->now = MAP->FindPrv(now);
+                return *this;
+
+            }
+            value_type& operator*() const
+            {
+                return *(now->data);
+            }
+            bool operator==(const iterator& rhs) const
+            {
+                if (now == rhs.now && MAP == rhs.MAP)  return true;
+                else return false;
+            }
+            bool operator==(const const_iterator& rhs) const
+            {
+                if (now == rhs.now && MAP == rhs.MAP)  return true;
+                else return false;
+            }
+            bool operator!=(const iterator& rhs) const
+            {
+                if (now != rhs.now || MAP != rhs.MAP)  return true;
+                else return false;
+            }
+            bool operator!=(const const_iterator& rhs) const
+            {
+                if (now != rhs.now || MAP != rhs.MAP)  return true;
+                else return false;
+            }
+            value_type* operator->() const noexcept
+            {
+                return now->data;
+            }
+        };
+
+        map()
+        {
+            root = nullptr;
+            rear = new AvlNode();
+        }
+        map(const map& other)
+        {
+            root = nullptr;
+            Copy(root, other.root, nullptr);
+            rear = new AvlNode();
+            tot = other.tot;
+        }
+        /**
+         * TODO assignment operator
+         */
+        map& operator=(const map& other)
+        {
+            if (this == &other)return *this;
+            Clear(root);
+            root = nullptr;
+            Copy(root, other.root, nullptr);
+            tot = other.tot;
+            return *this;
+        }
+        /**
+         * TODO Destructors
+         */
+        ~map()
+        {
+            Clear(root);
+            root = nullptr;
+            delete rear;
+            tot = 0;
+        }
+        /**
+         * TODO
+         * access specified element with bounds checking
+         * Returns a reference to the mapped value of the element with key equivalent to key.
+         * If no such element exists, an exception of type `index_out_of_bound'
+         */
+        T& at(const Key& key)
+        {
+            AvlNode* now = Find(key, root);
+            if (now == nullptr)     throw index_out_of_bound();
+            else return now->data->second;
+        }
+        const T& at(const Key& key) const
+        {
+            AvlNode* now = Find(key, root);
+            if (now == nullptr)     throw index_out_of_bound();
+            else return now->data->second;
+        }
+        /**
+         * TODO
+         * access specified element
+         * Returns a reference to the value that is mapped to a key equivalent to key,
+         *   performing an insertion if such key does not already exist.
+         */
+        T& operator[](const Key& key)
+        {
+            AvlNode* now = Find(key, root);
+            if (now != nullptr)     return now->data->second;
+            insert(value_type(key, T()), root, nullptr);
+            tot++;
+            now = Find(key, root);
+            return now->data->second;
+
+        }
+        /**
+         * behave like at() throw index_out_of_bound if such key does not exist.
+         */
+        const T& operator[](const Key& key) const
+        {
+            AvlNode* now = Find(key, root);
+            if (now == nullptr)     throw index_out_of_bound();
+            else return now->data->second;
+        }
+        /**
+         * return a iterator to the beginning
+         */
+        iterator begin()
+        {
+            if(root)
+                return iterator(FindMin(root), this);
+            else
+                return iterator(rear, this);
+        }
+        const_iterator cbegin() const
+        {
+            if (root)
+                return const_iterator(FindMin(root), this);
+            else
+                return const_iterator(rear, this);
+        }
+        /**
+         * return a iterator to the end
+         * in fact, it returns past-the-end.
+         */
+        iterator end()
+        {
+            return iterator(rear, this);
+        }
+        const_iterator cend() const
+        {
+            return const_iterator(rear, this);
+        }
+        /**
+         * checks whether the container is empty
+         * return true if empty, otherwise false.
+         */
+        bool empty() const
+        {
+            if (tot == 0)   return true;
+            else return false;
+        }
+        /**
+         * returns the number of elements.
+         */
+        size_t size() const
+        {
+            return tot;
+        }
+        /**
+         * clears the contents
+         */
+        void clear()
+        {
+            Clear(root);
+            root = nullptr;
+            tot = 0;
+        }
+        /**
+         * insert an element.
+         * return a pair, the first of the pair is
+         *   the iterator to the new element (or the element that prevented the insertion),
+         *   the second one is true if insert successfully, or false.
+         */
+        pair<iterator, bool> insert(const value_type& value)
+        {
+            AvlNode* tmp = Find(value.first, root);
+            if (tmp != nullptr)return pair<iterator, bool>(iterator(tmp, this), false);
+            tot++;
+            insert(value, root, nullptr);
+            tmp = Find(value.first, root);
+            return pair<iterator, bool>(iterator(tmp, this), true);
+        }
+        /**
+         * erase the element at pos.
+         *
+         * throw if pos pointed to a bad element (pos == this->end() || pos points an element out of this)
+         */
+        void erase(iterator pos)
+        {
+            if (pos.now == rear || pos.MAP != this)
+            {
+                throw invalid_iterator();
+            }
+            tot--;
+            remove(pos.now);
+        }
+        /**
+         * Returns the number of elements with key
+         *   that compares equivalent to the specified argument,
+         *   which is either 1 or 0
+         *     since this container does not allow duplicates.
+         * The default method of check the equivalence is !(a < b || b > a)
+         * 检查等价性的默认方法是!(a < b || b > a)?
+         */
+        size_t count(const Key& key) const
+        {
+            AvlNode* tmp = Find(key, root);
+            if (tmp != nullptr)    return 1;
+            else return 0;
+        }
+        /**
+         * Finds an element with key equivalent to key.
+         * key value of the element to search for.
+         * Iterator to an element with key equivalent to key.
+         *   If no such element is found, past-the-end (see end()) iterator is returned.
+         */
+        iterator find(const Key& key)
+        {
+            AvlNode* tmp = Find(key, root);
+            if (tmp != nullptr) return iterator(tmp, this);
+            return iterator(rear, this);
+        }
+        const_iterator find(const Key& key) const
+        {
+            AvlNode* tmp = Find(key, root);
+            if (tmp != nullptr) return const_iterator(tmp, this);
+            return const_iterator(rear, this);
+        }
+    };
+
+}
+
+#endif
