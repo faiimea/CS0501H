@@ -1,0 +1,39 @@
+#include <iostream>
+#include <cstring>
+using namespace std;
+int n, m, a[100];
+long long int res;
+long long int tim[100];
+long long int dp[100][100];
+int main() 
+{
+    cin >> n >> m;
+    for (int i = 1; i <= m; i++) 
+    {
+        tim[i] = i * i + i + 1;
+    }
+    for (int cnt = 1; cnt <= n; cnt++) 
+    {
+        for (int i = 1; i <= m; i++)
+        {
+            cin >> a[i];//每行独立，每一行处理一次
+        }
+        for (int k = 1; k <= m; k++) 
+        {
+            for (int i = 1, j = m - k; j <= m && i <= m; i++, j++) 
+            {
+                if (i - 1 >= 1)
+                    dp[i][j] = max(dp[i][j], dp[i - 1][j] + tim[k] * a[i - 1]);
+                if (j + 1 <= m)
+                    dp[i][j] = max(dp[i][j], dp[i][j + 1] + tim[k] * a[j + 1]);
+            }
+        }
+        long long t = 0;
+        for (int i = 2; i <= m; i++)
+            t = max(t, dp[i][i - 1]);
+        res += t;
+        memset(dp, 0, sizeof(dp));
+    }
+    cout << res;
+    return 0;
+}
