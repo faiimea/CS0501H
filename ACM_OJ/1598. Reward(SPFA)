@@ -1,0 +1,85 @@
+#include <iostream>
+#include <queue>
+
+using namespace std;
+const int maxn = 100005;
+const int maxm = 200005;
+struct edge
+{
+	int next;
+	int to;
+}E[maxm];
+queue<int> Q;
+int dis[maxn];
+int vis[maxn];
+int head[maxn];
+int rou[maxn];
+int tot;
+int n, m;
+
+void insert(int u, int v)
+{
+	tot++;
+	E[tot].next = head[u];
+	E[tot].to = v;
+	head[u] = tot;
+}
+
+bool find()
+{
+	for (int i = 0;i < maxn;++i)	dis[i] = 0;
+	vis[0] = true;
+	dis[0] = 0;
+	Q.push(0);
+	int no;
+	int a, b;
+	while (!Q.empty())
+	{
+		no = Q.front();
+		Q.pop();
+		vis[no] = false;
+		if(rou[no]>=n-1)
+		{
+			return true;
+		}
+		rou[no] += 1;
+		for (int i = head[no];i;i = E[i].next)
+		{
+			a = E[i].to;
+			if (dis[a] < dis[no] + 1)
+			{
+				dis[a] = dis[no] + 1;
+				if (vis[a] == false)
+				{
+					vis[a] = true;
+					Q.push(a);
+				}
+			}
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	cin >> n >> m;
+	int a, b;
+	for (int i = 0;i < m;++i)
+	{
+		cin >> a >> b;
+		insert(b, a);
+	}
+	for (int i = 1;i <= n;++i)	insert(0, i);
+	long long int ans = 0;
+	if (find())	cout << "Poor Xed";
+	else
+	{
+		for (int i = 1;i <= n;++i)
+		{
+			ans += dis[i];
+			ans += 99;
+		}
+		cout << ans;
+	}
+
+}
